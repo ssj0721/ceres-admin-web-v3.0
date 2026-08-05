@@ -1,0 +1,22 @@
+<template>
+    <el-button @click="completeIframeUrl">嵌入</el-button>
+    <div>
+      <x-iframe :src="finalurl"></x-iframe>
+    </div>
+</template>
+   
+<script setup>
+import { ref, toRefs, reactive, onMounted } from 'vue';
+import ireIframe from '@/utils/ireIframe'
+
+const finalurl = ref("")
+const url = ref("/po/pomnt003")
+
+async function completeIframeUrl() {
+  finalurl.value = await ireIframe(url.value)
+}
+
+// onMounted(() => {
+//   completeIframeUrl()
+// });
+</script>

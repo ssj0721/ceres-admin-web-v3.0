@@ -1,0 +1,112 @@
+@use "sass:map";
+
+// sidebar
+$menuText: #bfcbd9;
+$menuActiveText: #3a68f2;
+$subMenuActiveText: #f4f4f5; //https://github.com/ElemeFE/element/issues/12951
+
+$menuBg: rgba(255, 255, 255, 0.7);
+$menuHover: #263445;
+
+$subMenuBg: #1f2d3d;
+$subMenuHover: #001528;
+
+$sideBarWidth: 210px;
+$collapseSideBarWidth: 64px;
+
+// 定义容器边距，字体大小等
+$container-margin: 24px;
+$container-margin-2: 12px;
+$container-margin-3: 32px;
+$container-base-padding: 32px;
+$container-base-padding-2: 16px;
+$container-base-padding-3: 12px;
+$container-base-padding-4: 8px;
+// 字体大小（虽然没什么必要但是还是写了
+$font-size-base: 14px; // 主要字体大小
+$font-size-small: 12px;
+$font-size-mini: 10px;
+$font-size-medium: 16px;
+$font-size-large: 20px;
+
+// 圆角
+$border-radius-mini: 4px;
+$border-radius-medium: 8px;
+//ui稿文字颜色设置
+$primary-text-color: #1a1a1a; // 主文本
+$secondary-text-color: #666666; // 文本灰1
+$placeholder-text-color: #999999;
+$comment-text-color: #dcdcdc;
+$white-text-color: #ffffff;
+
+// 中性色
+$neutral-color-1: #ffffff; // 中性色1，用作页面背景色
+$neutral-color-2: #f0f2fa; // 中性色2，表格导航栏、控件不可选择状态
+$neutral-color-3: #e9ebf5; // 中性色3，在中性色2上使用
+$neutral-color-4: #d5dae8; // 中性色4，分割线、位置条等组件
+$neutral-color-5: #bdc4db; // 中性色5，默认边框颜色
+$neutral-color-7: #fefeff; // 中性色7，表格背景色
+// 主题色
+$theme-color-1: #f1f4fe; // 主题色1，用作页面背景色、鼠标悬停反馈
+$theme-color-2: #e9eefd; // 主题色2，组件填充颜色
+$theme-color-3: #beccfa; // 主题色3，按钮不可选择状态
+$theme-color-4: #93aaf6; // 主题色4，鼠标悬停反馈
+$theme-color-5: #6989f3; // 真 主题色
+$theme-color-6: #335eee; // 主题色6，按钮选中
+$theme-color-7: #0d2fa0; // 主题色7，输入框文字颜色
+
+// 阴影1，用于menu 对应ui稿的中层投影
+$shadow-1: 0 4px 13px rgba(83, 117, 227, 0.1);
+
+// 阴影2，用于card，面包屑之类的
+$shadow-2: 0 2px 2px rgba(255, 255, 255, 0.15);
+
+// ui稿的基础投影，但是没怎么用过，和下文他自己描述的不太一样
+$shadow-3: 0 4px 13px 0 rgba(83, 117, 227, 0.1),
+  0 4px 4px 0 rgba(83, 117, 227, 0.1);
+
+// 上层投影 警示或弹窗组件使用，全局提示消息提示
+$shadow-4: 0 6px 13px 5px rgba(83, 117, 227, 0.1);
+
+// ui稿的模糊效果，也是没怎么用过
+// 内阴影
+
+$background-blur: (
+  shadow: inset 0 2px 2px rgba(0, 0, 0, 0.3),
+  blur: blur(4px),
+  opacity: 0.5,
+);
+
+// 通用模糊
+$backdrop-filter-base: blur(5px);
+
+// the :export directive is the magic sauce for webpack
+// https://www.bluematador.com/blog/how-to-share-variables-between-js-and-sass
+
+// the :export directive is the magic sauce for webpack
+// https://www.bluematador.com/blog/how-to-share-variables-between-js-and-sass
+:export {
+  menuText: $menuText;
+  menuActiveText: $menuActiveText;
+  subMenuActiveText: $subMenuActiveText;
+  menuBg: $menuBg;
+  menuHover: $menuHover;
+  subMenuBg: $subMenuBg;
+  subMenuHover: $subMenuHover;
+  sideBarWidth: $sideBarWidth;
+  neutralColor1: $neutral-color-1;
+  neutralColor2: $neutral-color-2;
+  neutralColor3: $neutral-color-3;
+  neutralColor4: $neutral-color-4;
+  neutralColor5: $neutral-color-5;
+  themeColor1: $theme-color-1;
+  themeColor2: $theme-color-2;
+  themeColor3: $theme-color-3;
+  themeColor4: $theme-color-4;
+  themeColor5: $theme-color-5;
+  themeColor6: $theme-color-6;
+  themeColor7: $theme-color-7;
+  backgroundBlurShadow: map.get($background-blur, shadow);
+  backgroundBlurEffect: map.get($background-blur, blur);
+  backgroundBlurOpacity: map.get($background-blur, opacity);
+}

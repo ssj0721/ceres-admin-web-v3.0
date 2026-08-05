@@ -1,0 +1,471 @@
+<template>
+  <basic-container class="container">
+    <div style="width: 100%; display: flex; font-size: large;">&nbsp;ScmAdm031</div>
+  <div class="pending">
+    <!-- 搜索 -->
+    <!-- <div class="formSearch"> -->
+    <mybottons>
+      <el-form :inline="true" :model="searchData">
+        <el-form-item label="运营团队名">
+          <el-input
+            v-model="searchData.name"
+            maxlength="20"
+            placeholder="请输入运营团队名"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="search">查询</el-button>
+          <el-button type="primary" @click="clear">重置</el-button>
+          <el-button type="primary" @click="add">新增运营团队</el-button>
+        </el-form-item>
+      </el-form>
+    </mybottons>
+    <!-- </div> -->
+    <!-- 表格 -->
+    <div class="second-main-container">
+      <el-table
+        v-loading="tableLoading"
+        :data="tableData"
+        border
+        :header-cell-style="{ 'background': '#EEF3FF', 'color': '#333333' }"
+        tooltip-effect="dark"
+        :style="{ 'width': '100%' }"
+        class="dataTable"
+        v-horizontal-scroll="'always'"
+      >
+        <el-table-column label="运营团队id" width="100">
+          <template #default="scope">{{ scope.row.id }}</template>
+        </el-table-column>
+        <el-table-column label="所属联营商" width="200">
+          <template #default="scope">{{ scope.row.merchant }}</template>
+        </el-table-column>
+        <el-table-column prop="name" label="运营团队名称" />
+        <el-table-column prop="phone" label="电话" />
+        <el-table-column prop="email" label="邮箱" />
+        <el-table-column prop="createTime" label="创建时间" />
+        <el-table-column label="操作">
+          <template #default="scope">
+            <div class="btnList">
+              <el-button link type="primary" @click="edit(scope.row)">编辑</el-button>
+              <el-popconfirm title="确认删除？" @confirm="del(scope.row)">
+                <template #reference>
+                  <el-button type="danger" link>删除</el-button>
+                </template>
+              </el-popconfirm>
+              <!-- <el-button link type="primary" @click="buss(scope.row)">分配功能权限</el-button> -->
+              <el-button link type="primary" @click="bussdata(scope.row)">分配运营团队账号</el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div class="pagination-container">
+        <el-pagination
+          v-model:current-page="searchData.page"
+          :page-sizes="[10, 20, 50, 100]"
+          :page-size="searchData.pageSize"
+          layout="total, sizes, prev, pager, next, jumper"
+          background
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
+    </div>
+
+    <!-- *************对话框开始************* -->
+    <!-- 新增运营团队 -->
+    <el-dialog
+      v-model="addFormDialog"
+      :title="userState ? '新增运营团队' : '修改运营团队'"
+      width="30%"
+      center
+      :close-on-click-modal="false"
+      @closed="onClosed"
+    >
+      <!-- 新增运营团队 -->
+      <div>
+        <el-form
+          ref="formRef"
+          :model="addForm"
+          label-width="80px"
+          :rules="userRules"
+        >
+          <el-form-item label="名称" prop="name">
+            <el-input
+              v-model="addForm.name"
+              maxlength="20"
+              placeholder="请输入运营团队名称"
+            />
+          </el-form-item>
+          <el-form-item label="电话" prop="phone">
+            <el-input
+              v-model="addForm.phone"
+              maxlength="60"
+              placeholder="请输入运营团队电话"
+            />
+          </el-form-item>
+          <el-form-item label="邮箱" prop="email">
+            <el-input
+              v-model="addForm.email"
+              maxlength="60"
+              placeholder="请输入运营团队邮箱"
+            />
+          </el-form-item>
+          <el-form-item label="联营商" prop="merchant">
+            <el-select v-model="addForm.merchant" placeholder="请选择联营商">
+              <el-option v-for="(item, index) in usernamelist" :key="index" :label="item.name" :value="item.id"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-form>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="addFormDialog = false">取 消</el-button>
+          <el-button type="primary" :loading="submitLoading" @click="addForm_enter(formRef)">确 定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 分配运营团队账号 -->
+    <el-dialog
+      v-model="dialogdataVisible"
+      title="分配运营团队账号"
+      center
+      :close-on-click-modal="false"
+    >
+      <el-form :model="activityData" label-width="80px" label-position="left">
+        <el-form-item label="运营团队账号列表">
+          <el-tree
+            ref="groupAccountRef"
+            :data="accountList"
+            show-checkbox
+            check-strictly
+            render-after-expand
+            default-expand-all
+            node-key="buyerUserId"
+            :props="dataprops"
+            @check="DataHandleCheck"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="dialogdataVisible = false">取消</el-button>
+          <el-button type="primary" :loading="dataConfirmLoading" @click="editDataRole">确认</el-button>
+        </span>
+      </template>
+    </el-dialog>
+  </div>
+  </basic-container>
+</template>
+
+<script setup>
+import { ref, onBeforeMount } from 'vue'
+import {
+  groupAdd,
+  groupGetall,
+  groupGetById,
+  groupUpdate,
+  groupDelete,
+  getRolePermission,
+  getGroupAccount,
+  confirmGroupAccount
+} from '@/api/membergroup'
+import { usernameSelect } from '@/api/business'
+
+const formRef = ref(null)
+const permissionRef = ref(null)
+const groupAccountRef = ref(null)
+const tableLoading = ref(false)
+const submitLoading = ref(false)
+const confirmLoading = ref(false)
+const dataConfirmLoading = ref(false)
+const searchData = ref({
+  name: '', // 搜索字段
+  type:'data', //权限类型为功能
+  page: 1, // 当前页
+  pageSize: 10, // 每页记录数
+})
+const total = ref(1)
+const tableData = ref([])
+const activityObj = ref({
+  ids: [],
+})
+
+const activityData = ref({
+  ids: [],
+})
+const props = ref({
+  children: 'childs',
+  label: 'permissionName',
+})
+
+const dataprops = ref({
+  children: 'childs',
+  label: 'name',
+})
+const userState = ref(1)
+const dialogVisible = ref(false)
+const dialogdataVisible = ref(false)
+const permissionsList = ref([])
+const accountList = ref([])
+const checkedIds = ref([])
+const pIds = ref([])
+const addForm = ref({
+  id:'',  //运营团队分组id
+  name: '', // 运营团队名称
+  phone: '', // 运营团队电话
+  email:'' ,// 运营团队邮箱
+  merchant:'' //所属联营商
+})
+const addFormDialog = ref(false)
+const userRules = ref({
+  roleName: [
+    { required: true, message: '请输入运营团队名称', trigger: 'blur' },
+  ],
+})
+const groupId = ref(null)
+const usernamelist = ref([])
+
+onBeforeMount(() => {
+  getAll()
+  getusernames()
+})
+// 方法集合
+const handleSizeChange = (val) => {
+  searchData.value.pageSize = val
+  getAll()
+}
+const handleCurrentChange = (val) => {
+  searchData.value.page = val
+  getAll()
+}
+// 查询
+const search = () => {
+  total.value = 1
+  searchData.value.page = 1
+  getAll()
+}
+// 清除
+const clear = () => {
+  searchData.value = {
+    name: '', // 搜索字段
+    state: '', // 是否启用 1-是 0-否
+    page: 1, // 当前页
+    pageSize: 10, // 每页记录数
+  }
+  getAll()
+}
+// 新增运营团队
+const add = () => {
+  userState.value = 1
+  addFormDialog.value = true
+}
+//获取联营商列表
+const getusernames = () => {
+  usernameSelect().then((res)=>{
+    console.log("处理res",res)
+    usernamelist.value = res.data
+  })
+}
+
+
+// 确认新增运营团队
+const addForm_enter = async (formEl) => {
+  if (!formEl) return
+  await formEl.validate((valid, fields) => {
+    if (valid) {
+      addForm.value.type='data'
+      submitLoading.value = true
+      if (userState.value) {
+        groupAdd(addForm.value).then((res) => {
+          if (res.code === '') {
+            ElMessage({
+              message: '新增成功',
+              type: 'success',
+            })
+          }
+          getAll()
+          addFormDialog.value = false
+        }).finally(() => {
+          submitLoading.value = false
+        })
+      } else {
+        groupUpdate(addForm.value).then((res) => {
+          if (res.code === '') {
+            ElMessage({
+              message: '修改成功',
+              type: 'success',
+            })
+          }
+          getAll()
+          addFormDialog.value = false
+        }).finally(() => {
+          submitLoading.value = false
+        })
+      }
+    } else {
+      return false
+    }
+  })
+}
+// 弹窗关闭
+const onClosed = () => {
+  formRef.value.resetFields()
+}
+// 编辑运营团队
+const edit = (row) => {
+  userState.value = 0
+  addFormDialog.value = true
+  groupGetById({ id: row.id }).then((res) => {
+    console.log('编辑弹窗',res.data);
+    addForm.value = res.data
+    // this.addForm.groupIds = [1];
+  })
+}
+// 删除运营团队
+const del = async (row) => {
+  ElMessageBox.confirm(
+    '此操作将永久删除该运营团队分组, 是否继续?',
+    '提示',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  )
+    .then(() => {
+      groupDelete({ id: row.id }).then((res) => {
+        if (res.code === '') {
+          ElMessage({
+            type: 'success',
+            message: '删除成功!',
+          })
+        }
+        getAll()
+      })
+    })
+    .catch(() => {})
+}
+
+// 分配运营团队账号
+const bussdata = async (row) => {
+  console.log('分配运营团队账号row',row);
+  groupId.value = row.id
+  dialogdataVisible.value = true
+  const res = await getGroupAccount({
+    groupId: groupId.value,
+  })
+  console.log("运营团队账号的res",res)
+  if (res.code === '') {
+    accountList.value = res.data.accounts
+    groupAccountRef.value.setCheckedKeys(res.data.accountIds)
+    console.log("运营团队账号accountList",accountList)
+  }
+}
+
+const editDataRole = async () => {
+  dataConfirmLoading.value = true
+  try {
+    let params = {
+      groupId: groupId.value,
+      accountIds: checkedIds.value,
+      // permissionPids: pIds.value
+    }
+    console.log("提交分配账号参数",params)
+    if(checkedIds.value.length>0){
+      const res = await confirmGroupAccount(params)
+      if (res.code === '') {
+        ElMessage.success('分配成功')
+        dialogVisible.value = false
+        groupId.value = null
+      }
+    }
+  } finally {
+    dataConfirmLoading.value = false
+    dialogdataVisible.value = false
+  }
+  // const loading = this.$loading({
+  //   lock: true,
+  //   text: '处理中请稍后...',
+  //   spinner: 'el-icon-loading',
+  //   background: 'rgba(0, 0, 0, 0.3)',
+  // })
+}
+
+// 获取选中的ID(运营团队账号)
+const DataHandleCheck = (data, { checkedKeys,checkedNodes }) => {
+  console.log("选中",data)
+  // pIds.value = checkedNodes
+  checkedIds.value = checkedKeys
+
+  console.log("选中PARAMS",pIds,'----',checkedNodes)
+}
+
+// 初始化查询所有数据
+const getAll = async () => {
+  tableLoading.value = true
+  try {
+    const res = await groupGetall(searchData.value)
+    tableData.value = res.data.list
+    total.value = res.data.total
+  } finally {
+    tableLoading.value = false
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.userStyle {
+  padding: 20px;
+  margin-top: 20px;
+  background-color: #FFFFFF;
+}
+.el-tree {
+  width: 100%;
+}
+</style>
+
+<style lang="scss" scoped>
+
+.container{
+  // padding:.4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.second-main-container{
+  width: 95%;
+  background: $neutral-color-1;
+  display: flex;
+  flex-direction: column;
+  margin: $container-margin ;
+  padding: $container-base-padding-2;
+  border-radius: $border-radius-medium;
+  .el-form .el-form-item {
+    margin-bottom: 0px;
+  }
+  box-shadow: $shadow-1;
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.pending {
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  // margin-top: 20px;
+  // background-color: #FFFFFF;
+  width: 100%;
+  margin:24px;
+  // margin-left:24px;
+}
+
+</style>

@@ -1,0 +1,131 @@
+@import './variables.module.scss';
+@import './mixin.scss';
+@import './transition.scss';
+@import './element-ui.scss';
+@import './sidebar.scss';
+@import url('./elDialog.scss');
+@import './el-button.scss';
+@import url('./avue.scss');
+
+
+/*这个是尝试使用官网的woff2发现可以，说明之前的问题是因为压缩以后不能用了*/
+// @font-face {
+//   font-family: 'Source Han Sans CN';
+//   src: url('/SourceHanSansCN-VF.woff2') format('woff2'),
+//     url('/SourceHanSansCN-Normal-Alphabetic.woff') format('woff');
+//   font-weight: normal;
+//   font-style: normal;
+//   font-display: swap;
+// }
+
+// 这个就是还是引用了很大的otf文件
+@font-face {
+  font-family: 'Source Han Sans CN';
+  src: url('/SourceHanSansCN-Normal.otf') format('opentype'),
+    url('/SourceHanSansCN-Normal-Alphabetic.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SourceHanSansCN-Regular-Alphabetic';
+  src: url('/SourceHanSansCN-Regular-Alphabetic.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Source Han Sans CN';
+  src: url('/SourceHanSansCN-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Source Han Sans CN';
+  src: url('/SourceHanSansCN-Regular.woff2') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
+body {
+  height: 100%;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  // 这里先arial是因为英文字体他会使用arial，然后后面的是中文字体
+  font-family: Arial, 'Source Han Sans CN', 'SourceHanSansCN-Regular-Alphabetic', sans-serif !important;
+  color: $primary-text-color;
+}
+
+label {
+  font-weight: 700;
+}
+
+html {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+#app {
+  height: 100%;
+    // background-color: #F1F4FE;
+  // 从上到下渐变
+  // background: linear-gradient(180deg, #E4ECF8 0%, #F1F4FE 20%);
+  // 在背景的上部分插入背景图片
+  // background:
+  //   url('@/assets/images/background_home.png') no-repeat center top / auto 55%,
+  //   #F1F4FE;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+a:focus,
+a:active {
+  outline: none;
+}
+
+a,
+a:focus,
+a:hover {
+  cursor: pointer;
+  color: inherit;
+  text-decoration: none;
+}
+
+div:focus {
+  outline: none;
+}
+
+.clearfix {
+  &:after {
+    visibility: hidden;
+    display: block;
+    font-size: 0;
+    content: " ";
+    clear: both;
+    height: 0;
+  }
+}
+
+// main-container global css
+.app-container {
+  padding: 20px;
+}
+
+// 定义全局的滚动条样式 颜色为#BDC4DB
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-thumb {
+  background: #BDC4DB;
+  border-radius: 4px;
+}

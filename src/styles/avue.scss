@@ -1,0 +1,199 @@
+//---------------统一设定---------------
+
+//---------------表单相关---------------
+//表单行高
+// .el-form-item {
+//   margin-bottom: 12px;
+// }
+// .el-form-item--small.el-form-item {
+//   margin-bottom: 4px;
+// }
+// .el-form-item--mini.el-form-item {
+//   margin-bottom: 2px;
+// }
+//表单分组？--包住表单的外框，紧接着是按钮
+
+// 现在是针对avue的tip部分，就是那个选择，情况的那段文字进行规范
+
+.avue-crud__tip {
+  font-size: 14px !important;
+  line-height: 22px;
+  color: $theme-color-5 !important;
+  background-color: $neutral-color-1 !important;
+  border: none !important;
+  margin-bottom: 12px !important;
+  display: flex;
+  align-items: center;
+  height: 40px;
+}
+.avue-crud__tip-count {
+  padding: 0 4px;
+  font-size: 18px !important;
+}
+.avue-crud__tip-button {
+  font-size: 12px;
+  padding: 4px 12px;
+  margin: 8px;
+  background-color: $neutral-color-1;
+  border-radius: $border-radius-mini;
+  border: 1px solid;
+  font-weight: 500 !important;
+  transition: 0.2s;
+  &:hover {
+    background-color: rgba($neutral-color-1, 0.7);
+    color: $theme-color-6;
+  }
+}
+.avue-crud__header {
+  display: none !important;
+}
+.avue-group__item {
+  margin-bottom: 2px;
+}
+//整个表单外框
+.el-card__body {
+  padding: 12px;
+}
+//整个表单外外框
+.avue-view {
+  padding-bottom: 12px;
+}
+//工具栏按钮
+div.el-button-group > .el-button {
+  padding: 8px 20px;
+}
+//网格单元格的按钮高度控制，显示更加紧凑[高度]
+.el-table .cell > button.el-button--small {
+  padding: 0px 1px;
+}
+//表单录入框高度
+// .el-form-item__label {
+//   //height: 30px;
+//   line-height: 40px;
+// }
+// .el-form-item__content {
+//   line-height: 40px;
+// }
+// .el-input__inner {
+//   height: 30px;
+//   line-height: 30px;
+// }
+//多选下拉框增加数据可以平行延伸
+.el-select__tags {
+  overflow: hidden;
+  white-space: nowrap;
+  flex-wrap: nowrap;
+  //display: -webkit-box;
+}
+//阻止控件出现滚动条
+.el-main {
+  overflow: visible;
+}
+//调整折叠面板高度
+.el-collapse-item__arrow {
+  line-height: 35px;
+  float: left;
+  font-style: normal;
+  margin: 0;
+}
+.el-collapse-item__header {
+  height: 32px;
+}
+//调整组件与组件之间距离
+.avue-crud__menu {
+  min-height: 0px;
+}
+.el-col {
+  margin-bottom: 0px;
+}
+//---------------表单相关---------------
+//Table 组件的 row-class-name 属性样式
+.el-table .cancle-row {
+  background: #f0f0f0;
+}
+
+.el-table .warning-row {
+  background: oldlace;
+}
+
+.el-table .success-row {
+  background: #f0f9eb;
+}
+
+//xvue-crud表格行高
+.xvue-crud .el-table--medium td {
+  padding: 2px 0 !important;
+}
+
+//弹窗样式
+.el-dialog__body {
+  padding: 15px 15px;
+}
+
+//avue-crud表格行高
+.avue-crud .el-table--medium td {
+  padding: 2px 0 !important;
+}
+
+//表格树行高
+.el-table td,
+.el-table th {
+  padding: 2px 0 !important;
+}
+
+//表格的表头文字颜色
+.avue-crud .el-table th {
+  color: rgb(0, 0, 0);
+}
+
+//修正AVUE下，el-date-picker高度，待观察
+.el-range-editor--mini.el-input__inner {
+  height: 28px;
+}
+.el-range-editor--small.el-input__inner {
+  height: 32px;
+}
+//修正AVUE下，el-date-picker高度，待观察
+
+//主菜单图标与文字距离
+.el-submenu [class^="iconfont"] {
+  vertical-align: middle;
+  margin-right: 5px;
+  width: 24px;
+  text-align: center;
+  font-size: 18px;
+}
+//主菜单图标与文字距离
+//---------------统一设定---------------
+
+//---------------常用设定---------------
+//添加滚动条
+.et-checkbox-group {
+  overflow-y: scroll;
+  overflow-x: scroll;
+  height: 100%;
+  width: 100%;
+}
+//树状增加X和Y滚动条，和内边框
+.et-tree {
+  overflow-y: scroll;
+  overflow-x: scroll;
+  height: 100%;
+  width: 100%;
+  border: 1.5px solid #eee;
+  box-sizing: border-box;
+  border-radius: 3px;
+}
+//树状增加X和Y滚动条
+.el-tree-scroll {
+  overflow-y: scroll;
+  overflow-x: scroll;
+  height: 100%;
+  width: 100%;
+}
+
+.el-scrollbar__bar.is-horizontal{
+  /* width: 4px !important; */
+  height: 12px !important;;
+}
+//---------------常用设定---------------

@@ -1,0 +1,19 @@
+@import 'variables.module';
+
+.custom-button {
+    margin-left: 8px !important;
+    background-color: $theme-color-5 !important; /* 自定义的背景颜色 */
+    border-color: $theme-color-5 !important; /* 自定义的边框颜色 */
+}
+
+/* 覆盖hover状态下的颜色 */
+.custom-button:hover {
+  background-color: $theme-color-6 !important; /* 蓝色按钮 */
+  border-color: $theme-color-6 !important;
+}
+ 
+/* 覆盖disabled状态下的颜色 */
+.custom-button.is-disabled {
+  background-color: $theme-color-3 !important;
+  border-color: $theme-color-3 !important;
+}

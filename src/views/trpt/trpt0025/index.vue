@@ -1,0 +1,21 @@
+﻿<!-- D003-查詢聯營業務店鋪信息   -->
+<template>
+  <div>
+    <x-iframe :src="publicPath + src"></x-iframe>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      src:
+        "ReportServer/Pages/ReportViewer.aspx?%2fEShopReports%2fD003-%e6%9f%a5%e8%a9%a2%e8%81%af%e7%87%9f%e6%a5%ad%e5%8b%99%e5%ba%97%e9%8b%aa%e4%bf%a1%e6%81%af&rs:Command=Render",
+        publicPath: import.meta.env.VITE_BASE_PREFIX
+      };
+  },
+  created() {
+    // this.query()
+  },
+};
+</script>

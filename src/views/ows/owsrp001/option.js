@@ -1,0 +1,53 @@
+export const owsgoodsDataOptions = {
+  labelWidth: 120,
+  menuPosition: 'right',
+  submitText: '查询',
+  emptyText: '关闭报表',
+  emptyBtn: false,
+  submitBtn: false,
+  column: [
+    {
+      label: '联营商代码',
+      type: 'input',
+      prop: 'cmp_id',
+      placeholder: '请输入联营商代码',
+      // dicData: [],
+    },
+    {
+      label: '联营款号',
+      type: 'input',
+      prop: 'itemcode',
+      placeholder: '多款用空格、半角逗号或换行符分隔，单款号时模糊查询',
+      // dicData: [],
+    },
+    // {
+    //   label: "颜色",
+    //   type: "select",
+    //   prop: "col_id",
+    //   placeholder: "请选择颜色",
+    //   dicData: [],
+    //   span: 8,
+    // },
+    {
+      label: '品牌款字头',
+      type: 'input',
+      prop: 'bnd_id',
+      placeholder: '输入款字头(jws,jmf..)用空格、半角逗号或换行符分隔',
+      // dicData: [],
+    },
+    // {
+    //   label: "尺码",
+    //   type: "select",
+    //   prop: "siz_id",
+    //   placeholder: "请选择尺码",
+    //   dicData: [],
+    //   span: 8,
+    // },
+    // {
+    //   label: "版本",
+    //   prop: "ver",
+    //   placeholder: "请选择版本号: 1 2 3等",
+    //   span: 8,
+    // },
+  ],
+};
