@@ -1,5 +1,10 @@
 <template>
   <div class="menu-access-report-container">
+
+    <div>
+      <button @click="addadd">add</button>
+    </div>
+
     <div class="report-header">
       <div class="title-group">
         <h2 class="report-title">菜单访问历史统计报表</h2>
