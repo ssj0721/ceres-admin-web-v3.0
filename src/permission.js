@@ -18,6 +18,12 @@ router.beforeEach(async (to, from, next) => {
   // start progress bar
   NProgress.start()
 
+  // // 将 dashboard 重定向到商标首页
+  // if (to.path === '/dashboard') {
+  //   next({ path: '/trademark', replace: true })
+  //   return
+  // }
+
   if ((from.query && from.query.embed === '1') && !(to.query && Object.prototype.hasOwnProperty.call(to.query, 'embed'))) {
     next({
       ...to,

@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 /* Layout */
 import Layout from '@/layout/index.vue'
 import {checkForceSSO} from "@/api/user.js";
+import { title } from '@/settings';
 
 export const mainRoutes = [
   {
@@ -77,21 +78,40 @@ export const mainRoutes = [
   {
     path: '/',
     component: Layout,
-    redirect: '/dashboard',
+    redirect: '/trademark',
     meta: {
-      title: '总览',
+      title: '商标首页',
       icon: 'Monitor',
     },
     children: [
       {
-        path: 'dashboard',
-        name: 'dashboard',
-        component: () => import('@/views/dashboard/index.vue'),
+        path: 'trademark',
+        name: 'trademarkHome',
+        component: () => import('@/views/trademark/ap/pending/index.vue'),
         meta: {
-          title: '总览',
+          title: '商标首页',
           icon: 'Monitor',
         },
       },
+      {
+        path:'/trademark/ap/pending',
+        name:'Pending',
+        component:()=>import("@/views/trademark/ap/pending/index.vue"),
+      },
+      {
+        path:'/trademark/ap/pending/register',
+        name:'Register',
+        component:()=>import("@/views/trademark/ap/pending/form.vue"),
+      }
+      // {
+      //   path: 'dashboard',
+      //   name: 'dashboard',
+      //   component: () => import('@/views/dashboard/index.vue'),
+      //   meta: {
+      //     title: '总览',
+      //     icon: 'Monitor',
+      //   },
+      // },
     ],
   },
   {
