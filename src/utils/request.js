@@ -47,8 +47,10 @@ service.interceptors.request.use(
     // console.log(config)
     if (store.getters.token) {
       config.headers['Authorization-admin'] = getToken()
-      // config.headers['Content-Type'] = 'application/json'
-      config.headers['Content-Type'] = 'application/json; charset=UTF-8'
+      // FormData请求不设置Content-Type，让浏览器自动设置multipart/form-data及boundary
+      if (!(config.data instanceof FormData)) {
+        config.headers['Content-Type'] = 'application/json; charset=UTF-8'
+      }
       // config.headers['type'] = ' admin'
       // console.log('config',config);
     }

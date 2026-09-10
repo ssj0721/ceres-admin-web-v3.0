@@ -4,7 +4,7 @@ export function uploadFileApi (data) {
   return request({
     // url: '/sys/file/upload',
     // url: '/ali/file/upload',
-    url: '/nas/file/upload',
+    url: '/sys/file/upload',
     method: 'post',
     data: data,
     headers: {
@@ -17,7 +17,7 @@ export function getfileid (data) {
   return request({
     // url: '/sys/file/upload',
     // url: '/ali/file/upload',
-    url: '/nas/file/upload',
+    url: '/sys/file/upload',
     method: 'post',
     data: data,
   })
@@ -27,7 +27,7 @@ export function deletefile (data) {
   return request({
     // url: '/sys/file/delete',
     // url: '/ali/file/delete',
-    url: '/nas/file/delete',
+    url: '/sys/file/delete',
     method: 'post',
     data: data,
   })
@@ -66,5 +66,13 @@ export function angleImageByHand (data) {
     url: '/nas/file/angleImageByHand',
     method: 'post',
     data: data,
+  })
+}
+// 根据文件ID获取图片URL
+export function getImageUrl(fileId) {
+  return request({
+    url: '/sys/file/getImage',
+    method: 'post',
+    data: { fileId }
   })
 }

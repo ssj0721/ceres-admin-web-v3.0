@@ -65,7 +65,12 @@
         <el-table v-loading="tableLoading" class="dataTable" :header-cell-style="tableOptions.headStyle" :cell-style="tableOptions.cellStyle" :data="list" @selection-change="handleSelectionChange">
           <el-table-column type="selection" align="center" width="55" />
           <el-table-column type="index" align="center" label="序号" width="70" :index="(index) => (queryOptions.page - 1) * queryOptions.pageSize + index + 1" />
-          <el-table-column prop="applyNumber" align="center" label="申请编码" min-width="140" show-overflow-tooltip />
+          <el-table-column prop="applyNumber" align="center" label="申请编码" min-width="140" show-overflow-tooltip>
+            <template #default="scope">
+              <el-button v-if="scope.row.applyNumber" type="primary" link @click="handleEdit(scope.row)">{{ scope.row.applyNumber }}</el-button>
+              <span v-else>-</span>
+            </template>
+          </el-table-column>
           <el-table-column prop="type" align="center" label="申请类型" width="160" show-overflow-tooltip>
             <template #default="scope">{{ detailTypeMap[scope.row.type] || '-' }}</template>
           </el-table-column>
@@ -85,6 +90,7 @@
               <el-button v-if="activeTab === 0" type="danger" link @click="handleDelete(scope.row)">删除</el-button>
               <el-button v-if="activeTab === 1" type="warning" link @click="handleWithdraw(scope.row)">撤回</el-button>
               <el-button v-if="activeTab === 1" type="primary" link @click="handleExportRow(scope.row)">导出</el-button>
+              <el-button v-if="activeTab === 2" type="primary" link @click="handleConfirm(scope.row)">确认</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -114,7 +120,7 @@
 <script setup>
 import CreateDialog from './createDialog.vue'
 import { basicGetList } from '@/api/trademark/ap/basic'
-import { registerSubmit } from '@/api/trademark/ap/register'
+import { registerSubmit, registerUnapprove } from '@/api/trademark/ap/register'
 import { tabList, detailTypeMap, typeOptions, scopeMap, scopeOptions } from '../config'
 import { countryRegionGetList } from '@/api/trademark/bd/countryRegion'
 import { onMounted, ref } from 'vue'
@@ -213,7 +219,25 @@ function handleBatchSubmit() {
   }).catch(() => {})
 }
 
-function handleWithdraw(row) { ElMessage.info('撤回功能待实现') }
+function handleWithdraw(row) {
+  ElMessageBox.confirm('确认撤回该申请？撤回后将退回待提交状态', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }).then(() => {
+    registerUnapprove(row.id).then(() => { ElMessage.success('撤回成功'); handleGetTable() })
+  }).catch(() => {})
+}
+
+function handleConfirm(row) {
+  console.log("Yes")
+  router.push({ name: 'RegisterConfirm', query: { id: row.id } })
+}
+
+function handleEdit(row) {
+  // 已确认tab下点击申请编码跳转确认页面查看数据
+  if (activeTab.value === 3) {
+    router.push({ name: 'RegisterConfirm', query: { id: row.id } })
+    return
+  }
+  router.push({ name: 'Register', query: { id: row.id, type: row.type } })
+}
 function handleExport() { ElMessage.info('导出功能待实现') }
 function handleExportRow(row) { ElMessage.info('导出功能待实现') }
 

@@ -1,7 +1,7 @@
 <template>
   <div class="form-page">
     <div class="page-top">
-      <h1 class="page-title">编制申请</h1>
+      <h1 class="page-title">{{ isEdit ? "编辑申请" : "编制申请" }}</h1>
 
       <div class="topBtn">
         <el-button class="btn-submit" @click="handleSave">保存</el-button>
@@ -13,8 +13,11 @@
     <el-form ref="formRef" :model="form" :rules="formRules" class="mainForm">
       <!-- 基本信息 -->
       <div class="section">
-        <div class="section-header"><span class="section-bar"></span>基本信息</div>
-        <div class="form-grid">
+        <div class="section-header" @click="toggle('basic')">
+          <span class="section-title"><span class="section-bar"></span>基本信息</span>
+          <el-icon class="collapse-icon" :class="{ collapsed: collapsed.basic }"><DArrowRight /></el-icon>
+        </div>
+        <div v-show="!collapsed.basic" class="form-grid">
            <div class="form-row">
             <label class="form-label">申请类型：</label>
             <div class="form-input"><el-input :value="typeMap[form.type] || '-'" disabled class="input-disabled" /></div>
@@ -52,7 +55,7 @@
             </div>
           </div>
         </div>
-        <div class="form-basic-row-full">
+        <div v-show="!collapsed.basic" class="form-basic-row-full">
           <label class="form-label">备注：</label>
           <div class="form-input"><el-input v-model="form.remarks" type="textarea" :rows="3" placeholder="请输入" /></div>
         </div>
@@ -60,8 +63,11 @@
 
       <!-- 商标信息 -->
       <div class="section">
-        <div class="section-header"><span class="section-bar"></span>商标信息</div>
-        <div class="form-grid">
+        <div class="section-header" @click="toggle('brand')">
+          <span class="section-title"><span class="section-bar"></span>商标信息</span>
+          <el-icon class="collapse-icon" :class="{ collapsed: collapsed.brand }"><DArrowRight /></el-icon>
+        </div>
+        <div v-show="!collapsed.brand" class="form-grid">
           <div class="form-row required">
             <label class="form-label"><span class="req">*</span> 所属国家/地区：</label>
             <div class="form-input">
@@ -77,10 +83,13 @@
           <div class="form-row required">
             <label class="form-label"><span class="req">*</span> 商标：</label>
             <div class="form-input">
-              <el-upload class="brand-uploader" :auto-upload="false" :limit="1" accept=".jpg,.jpeg" :on-change="handleBrandChange">
-                <el-button class="btn-upload" plain>上传图片</el-button>
-                <template #tip><div class="upload-tip">注：图片限制JPG格式、像素246*43、英文文件名</div></template>
-              </el-upload>
+              <div class="brand-preview-wrap">
+                <img v-if="brandImageUrl" :src="brandImageUrl" class="brand-preview-img" />
+                <el-upload class="brand-uploader" :auto-upload="false" :limit="1" accept=".jpg,.jpeg" :on-change="handleBrandChange">
+                  <el-button class="btn-upload" plain>{{ brandImageUrl ? '重新上传' : '上传图片' }}</el-button>
+                  <template #tip><div class="upload-tip">注：图片限制JPG格式、像素246*43、英文文件名</div></template>
+                </el-upload>
+              </div>
             </div>
           </div>
           <div class="form-row required">
@@ -101,7 +110,7 @@
           </div>
         </div>
 
-        <div class="categoryTable">
+        <div v-show="!collapsed.brand" class="categoryTable">
           <el-table :data="form.categories" :header-cell-style="categoryHeaderStyle" :cell-style="{ height: '50px' }">
             <el-table-column type="index" label="序号" width="150" align="center" />
             <el-table-column label="类别编号" min-width="50">
@@ -128,8 +137,11 @@
 
       <!-- 代理人及费用信息 -->
       <div class="section">
-        <div class="section-header"><span class="section-bar"></span>代理人及费用信息</div>
-        <div class="form-grid">
+        <div class="section-header" @click="toggle('agent')">
+          <span class="section-title"><span class="section-bar"></span>代理人及费用信息</span>
+          <el-icon class="collapse-icon" :class="{ collapsed: collapsed.agent }"><DArrowRight /></el-icon>
+        </div>
+        <div v-show="!collapsed.agent" class="form-grid">
           <div class="form-row required">
             <label class="form-label"><span class="req">*</span> 代理人名称：</label>
             <div class="form-input">
@@ -167,7 +179,7 @@
             <div class="form-input"><el-input v-model="form.agentFee.bankNumber" placeholder="请输入" /></div>
           </div>
         </div>
-        <div class="form-basic-row-full">
+        <div v-show="!collapsed.agent" class="form-basic-row-full">
           <label class="form-label">付款公司信息：</label>
           <div class="form-input"><el-input v-model="form.agentFee.payCompany" type="textarea" :rows="3" placeholder="请输入" /></div>
         </div>
@@ -175,8 +187,11 @@
 
       <!-- 批件与意见信息 -->
       <div class="section">
-        <div class="section-header"><span class="section-bar"></span>批件与意见信息</div>
-        <div class="form-grid-single">
+        <div class="section-header" @click="toggle('opinion')">
+          <span class="section-title"><span class="section-bar"></span>批件与意见信息</span>
+          <el-icon class="collapse-icon" :class="{ collapsed: collapsed.opinion }"><DArrowRight /></el-icon>
+        </div>
+        <div v-show="!collapsed.opinion" class="form-grid-single">
           <div class="form-row-full">
             <label class="form-label">代理人意见：</label>
             <div class="form-input">
@@ -230,8 +245,11 @@
 
       <!-- 附件信息 -->
       <div class="section">
-        <div class="section-header"><span class="section-bar"></span>附件信息</div>
-        <div class="attachment-content">
+        <div class="section-header" @click="toggle('attachment')">
+          <span class="section-title"><span class="section-bar"></span>附件信息</span>
+          <el-icon class="collapse-icon" :class="{ collapsed: collapsed.attachment }"><DArrowRight /></el-icon>
+        </div>
+        <div v-show="!collapsed.attachment" class="attachment-content">
           <div class="attachment-item">
             <label class="attachment-label">附件：</label>
             <div class="attachment-input">
@@ -253,22 +271,29 @@
 </template>
 
 <script setup>
-import { registerAdd, registerSubmit } from '@/api/trademark/ap/register'
+import { registerAdd, registerUpdate, registerSubmit, registerGetDetail } from '@/api/trademark/ap/register'
 import { typeMap, scopeOptions, registerTypeOptions } from '../config'
 import { agentGetList } from '@/api/trademark/bd/agent'
 import { countryRegionGetList } from '@/api/trademark/bd/countryRegion'
 import { brandSeriesGetList } from '@/api/trademark/bd/brandSeries'
-import { uploadFileApi, deletefile } from '@/api/file'
+import { uploadFileApi, deletefile, getImageUrl } from '@/api/file'
 import { onMounted, ref } from 'vue'
-import { Plus, Minus } from '@element-plus/icons-vue'
+import { Plus, Minus, DArrowRight } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getUserName } from '@/utils/auth'
 
 const route = useRoute()
 const router = useRouter()
 const formRef = ref(null)
+const isEdit = ref(false)
+const editId = ref(null)
+// 各区块折叠状态（点击蓝色标题展开/收起）
+const collapsed = ref({ basic: false, brand: false, agent: false, opinion: false, attachment: false })
+function toggle(key) { collapsed.value[key] = !collapsed.value[key] }
 // 待上传文件（保存时统一上传）
+const brandImageUrl = ref('')
 const pendingFiles = ref({
+  brandUrl: null,
   agensecOpinionUrl: null,
   secretaryOpinionAttachment: null,
   legalOpinionAttachment: null,
@@ -312,13 +337,93 @@ const form = ref({
 const formRules = {}
 const options = ref({ agent: [], countryRegion: [], brandSeries: [] })
 
-onMounted(() => { loadOptions() })
+onMounted(() => {
+  loadOptions()
+  // 检查是否为编辑模式
+  if (route.query.id) {
+    isEdit.value = true
+    editId.value = Number(route.query.id)
+    loadEditData()
+  }
+})
 
 async function loadOptions() {
   try {
     const [a, r, s] = await Promise.all([agentGetList({page:1,pageSize:1000}), countryRegionGetList({page:1,pageSize:1000}), brandSeriesGetList({page:1,pageSize:1000})])
     options.value = { agent: a.data.list||[], countryRegion: r.data.list||[], brandSeries: s.data.list||[] }
   } catch (e) { console.error(e) }
+}
+
+async function loadEditData() {
+  try {
+    const res = await registerGetDetail(editId.value)
+    const data = res.data
+    if (!data) return
+    // 填充基本信息
+    if (data.basic) {
+      form.value.applyNumber = data.basic.applyNumber || ''
+      form.value.applyDate = data.basic.applyDate || getToday()
+      form.value.applyPerson = data.basic.applyPerson || ''
+      form.value.applyDepartment = data.basic.applyDepartment || ''
+      form.value.applyScope = data.basic.applyScope
+      form.value.remarks = data.basic.remarks || ''
+    }
+    // 填充商标信息
+    form.value.registerType = data.registerType
+    form.value.countryRegionId = data.countryRegionId
+    form.value.applyAddress = data.applyAddress || ''
+    form.value.brandUrl = data.brandPicUrl || ''
+    // 加载已有商标图片预览
+    if (data.brandPicUrl) {
+      if (/^https?:\/\//.test(data.brandPicUrl)) {
+        // 后端已解析为图片URL：直接展示，不回传fileId
+        brandImageUrl.value = data.brandPicUrl
+        form.value.brandUrl = null
+      } else {
+        getImageUrl(data.brandPicUrl).then(res => {
+          if (res && res.data) {
+            brandImageUrl.value = res.data
+          }
+        }).catch(() => {})
+      }
+    }
+    form.value.seriesId = data.seriesId
+    // 填充代理人费用
+    if (data.agentFee) {
+      form.value.agentFee = {
+        agentId: data.agentFee.agentId,
+        address: data.agentFee.address || '',
+        outsideFee: data.agentFee.outsideFee,
+        domesticFee: data.agentFee.domesticFee,
+        agentFee: data.agentFee.agentFee,
+        accountName: data.agentFee.accountName || '',
+        bankName: data.agentFee.bankName || '',
+        bankNumber: data.agentFee.bankNumber || '',
+        payCompany: data.agentFee.payCompany || ''
+      }
+    }
+    // 填充意见信息
+    form.value.agensecOpinion = data.agensecOpinion || ''
+    form.value.agensecOpinionUrl = data.agensecOpinionUrl
+    form.value.secretaryOpinion = data.secretaryOpinion || ''
+    form.value.secretaryOpinionAttachment = data.secretaryOpinionAttachment
+    form.value.legalOpinion = data.legalOpinion || ''
+    form.value.legalOpinionAttachment = data.legalOpinionAttachment
+    form.value.businessOpinion = data.businessOpinion || ''
+    form.value.businessOpinionAttachment = data.businessOpinionAttachment
+    form.value.attachment = data.attachment
+    form.value.remark = data.remark || ''
+    // 填充类别
+    if (data.categories && data.categories.length > 0) {
+      form.value.categories = data.categories.map(c => ({
+        categoryNo: c.brandCategory,
+        productService: c.producsecScope
+      }))
+    }
+  } catch (e) {
+    console.error('加载编辑数据失败:', e)
+    ElMessage.error('加载数据失败')
+  }
 }
 
 function handleAgentChange(agentId) {
@@ -334,7 +439,13 @@ function handleAgentChange(agentId) {
 
 function addCategory(i) { form.value.categories.splice(i+1, 0, {categoryNo:null, productService:''}) }
 function removeCategory(i) { if(form.value.categories.length>1) form.value.categories.splice(i,1) }
-function handleBrandChange(file) { form.value.brandUrl = file.name }
+function handleBrandChange(file) {
+  // console.log('handleBrandChange - file:', file)
+  // console.log('handleBrandChange - file.raw:', file.raw)
+  pendingFiles.value.brandUrl = file.raw
+  form.value.brandUrl = null
+  // console.log('pendingFiles.value.brandUrl:', pendingFiles.value.brandUrl)
+}
 function handleAttachmentChange() {}
 
 // 意见附件选择（暂存，保存时统一上传）
@@ -353,16 +464,17 @@ function handleOpinionRemove(field) {
 
 // 统一上传待上传文件
 async function uploadPendingFiles() {
-  const fields = ['agensecOpinionUrl', 'secretaryOpinionAttachment', 'legalOpinionAttachment', 'businessOpinionAttachment']
+  const fields = ['brandUrl', 'agensecOpinionUrl', 'secretaryOpinionAttachment', 'legalOpinionAttachment', 'businessOpinionAttachment']
   for (const field of fields) {
     const file = pendingFiles.value[field]
     if (file) {
       try {
         const formData = new FormData()
-        formData.append('file', file)
+        formData.append('fileList', file)
         const res = await uploadFileApi(formData)
-        if (res.data && res.data.fileId) {
-          form.value[field] = res.data.fileId
+        const fileId = res.data && res.data.fileId
+        if (fileId) {
+          form.value[field] = fileId
         }
       } catch (e) {
         console.error(field + ' 上传失败:', e)
@@ -374,7 +486,8 @@ async function uploadPendingFiles() {
 
 function buildParam() {
   return {
-    apBasicParam: { applyNumber:form.value.applyNumber || ('TMP-' + Date.now()), applyDate:form.value.applyDate, applyScope:form.value.applyScope, applyPerson:form.value.applyPerson, applyDepartment:form.value.applyDepartment, remarks:form.value.remarks },
+    id: isEdit.value ? editId.value : undefined,
+    apBasicParam: { applyNumber:form.value.applyNumber || (Date.now()), applyDate:form.value.applyDate, applyScope:form.value.applyScope, applyPerson:form.value.applyPerson, applyDepartment:form.value.applyDepartment, remarks:form.value.remarks },
     seriesId:form.value.seriesId, registerType:form.value.registerType, countryRegionId:form.value.countryRegionId,
     applyPerson:form.value.applyPerson, applyAddress:form.value.applyAddress, brandUrl:form.value.brandUrl,
     apAgentFeeParam: { agentId:form.value.agentFee.agentId, address:form.value.agentFee.address, outsideFee:form.value.agentFee.outsideFee, domesticFee:form.value.agentFee.domesticFee, agentFee:form.value.agentFee.agentFee, accountName:form.value.agentFee.accountName, bankName:form.value.agentFee.bankName, bankNumber:form.value.agentFee.bankNumber, payCompany:form.value.agentFee.payCompany },
@@ -391,7 +504,14 @@ async function doSave() {
     // 上传待上传文件
     await uploadPendingFiles()
     // 保存表单
-    await registerAdd(buildParam())
+    const param = buildParam()
+    console.log("Yes")
+    console.log(param)
+    if (isEdit.value) {
+      await registerUpdate(param)
+    } else {
+      await registerAdd(param)
+    }
     ElMessage.success('保存成功')
     return true
   } catch (e) {
@@ -411,10 +531,17 @@ async function handleSaveAndSubmit(){
     await formRef.value.validate()
     // 上传待上传文件
     await uploadPendingFiles()
-    // 保存并提交
-    const res=await registerAdd(buildParam())
-    ElMessage.success('保存并提交成功')
-    if(res&&res.data&&res.data.id) await registerSubmit(res.data.id)
+    let registerId = editId.value
+    if (isEdit.value) {
+      // 已保存过：只调用提交，不调用保存
+    } else {
+      // 新建：先保存再提交
+      const param = buildParam()
+      const res = await registerAdd(param)
+      if(res && res.data && res.data.id) registerId = res.data.id
+    }
+    if (registerId) await registerSubmit(registerId)
+    ElMessage.success('提交成功')
     router.back()
   }catch(e){
     console.error(e)
@@ -484,21 +611,35 @@ function handleCancel(){router.back()}
     .section-header {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       background: #f2f8ff;
       padding: 10px 16px;
       margin-bottom: 20px;
-      font-size: 16px;
-      font-weight: 600;
       color: #333333;
       margin-right: 20px;
+      cursor: pointer;
 
-      .section-bar {
-        display: inline-block;
-        width: 4px;
-        height: 18px;
-        background: #1890FF;
-        margin-right: 8px;
-        border-radius: 2px;
+      .section-title {
+        display: flex;
+        align-items: center;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333333;
+
+        .section-bar {
+          display: inline-block;
+          width: 4px;
+          height: 18px;
+          background: #1890FF;
+          margin-right: 8px;
+          border-radius: 2px;
+        }
+      }
+      .collapse-icon {
+        color: #1890FF;
+        transform: rotate(90deg);
+        transition: transform 0.2s;
+        &.collapsed { transform: rotate(0deg); }
       }
     }
   }
@@ -634,6 +775,19 @@ function handleCancel(){router.back()}
     font-size: 14px;
     padding: 15px 15px;
     font-weight: 500 !important;
+  }
+  .brand-preview-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-preview-img {
+    width: 120px;
+    height: auto;
+    max-height: 60px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    object-fit: contain;
   }
 
   .opinion-upload {
