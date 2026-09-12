@@ -107,6 +107,11 @@ export const mainRoutes = [
         path:'/trademark/ap/pending/register/confirm',
         name:'RegisterConfirm',
         component:()=>import("@/views/trademark/ap/pending/confirm.vue")
+      },
+      {
+        path:'/trademark/br/brand/detail',
+        name:'BrandDetail',
+        component:()=>import("@/views/trademark/br/brand/detail.vue")
       }
       // {
       //   path: 'dashboard',

@@ -7,6 +7,7 @@ const API = {
   GET_BY_ID: '/brBrand/getById',
   GET_ALL: '/brBrand/getAll',
   SEARCH: '/brBrand/search',
+  GET_DETAIL: '/brBrand/getDetail',
 }
 
 // 新增商标信息表
@@ -58,6 +59,15 @@ export function brBrandGetList(data) {
 export function brBrandSearch(data) {
   return request({
     url: API.SEARCH,
+    method: 'post',
+    data,
+  })
+}
+
+// 查询商标详情（关联注册表/基础表/类别表）
+export function brBrandGetDetail(data) {
+  return request({
+    url: API.GET_DETAIL,
     method: 'post',
     data,
   })

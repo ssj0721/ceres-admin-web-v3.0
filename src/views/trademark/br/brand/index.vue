@@ -1,238 +1,106 @@
 <template>
-  <div class="content">
-    <!-- 快捷搜索区 -->
-    <div class="quickSearch">
-      <div class="quickSearchLeft">
-        <span class="quickLabel">商标注册号</span>
-        <el-input
-          v-model="formInline.brandNo"
-          placeholder="请输入商标注册号"
-          clearable
-          style="width: 300px"
-          @keyup.enter="handleSearch"
-        />
-        <el-button type="primary" @click="handleSearch">搜索</el-button>
-        <el-button @click="handleClear">重置</el-button>
+  <div class="banner">
+    <div class="page-wrapper">
+      <!-- 页面标题 -->
+      <div class="page-header">
+        <h1 class="page-title">商标台账</h1>
       </div>
-      <div class="quickSearchRight">
-        <el-button plain @click="showFilter = !showFilter">
-          {{ showFilter ? '关闭过滤' : '展开过滤' }}
-        </el-button>
-        <el-button plain @click="showColumnSettings = true">列设置</el-button>
-        <!-- <el-button type="primary" @click="handleEditForm()">新增</el-button> -->
+
+      <!-- 搜索区域 -->
+      <div class="search-bar">
+        <el-form :inline="true" :model="formInline" class="search-form">
+          <el-form-item>
+            <el-input v-model="formInline.keyword" placeholder="申请编号/注册编号/申请人/注册人" clearable :prefix-icon="Search" style="width: 280px" />
+          </el-form-item>
+          <el-form-item label="注册状态">
+            <el-select v-model="formInline.registerStatus" placeholder="全部" clearable style="width: 140px">
+              <el-option v-for="item in registerStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="境内/境外">
+            <el-select v-model="formInline.scopeType" placeholder="全部" clearable style="width: 120px">
+              <el-option v-for="item in scopeOptions" :key="item.value" :label="item.label" :value="item.value" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="所属国家/地区">
+            <el-select v-model="formInline.countryRegionId" placeholder="全部" clearable filterable style="width: 160px">
+              <el-option v-for="item in options.countryRegion" :key="item.id" :label="item.name" :value="item.id" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="申请/注册日期">
+            <el-date-picker v-model="dateRange" type="daterange" range-separator="～" start-placeholder="开始时间" end-placeholder="结束时间" value-format="YYYY-MM-DD" clearable style="width: 240px" />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" class="btn-search" @click="handleSearch">查 询</el-button>
+            <el-button class="btn-reset" @click="handleClear">重 置</el-button>
+          </el-form-item>
+        </el-form>
       </div>
-    </div>
 
-    <!-- 可折叠过滤表单 -->
-    <div v-show="showFilter" class="filterForm">
-      <el-form :inline="true" :model="formInline" label-width="90px">
-        <el-row :gutter="15">
-          <el-col :span="6">
-            <el-form-item label="申请状态">
-              <el-select v-model="formInline.applyStatus" placeholder="请选择" clearable style="width: 100%">
-                <el-option label="申请中" :value="0" />
-                <el-option label="已注册" :value="1" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="注册类型">
-              <el-select v-model="formInline.registerType" placeholder="请选择" clearable style="width: 100%">
-                <el-option label="新设计" :value="0" />
-                <el-option label="扩大商品类别" :value="1" />
-                <el-option label="新增国家地区" :value="2" />
-                <el-option label="保护下注册" :value="3" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="国家地区">
-              <el-select v-model="formInline.countryRegionId" placeholder="请选择" clearable filterable style="width: 100%">
-                <el-option v-for="item in options.countryRegion" :key="item.id" :label="item.name" :value="item.id" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="权利人">
-              <el-select v-model="formInline.companyId" placeholder="请选择" clearable filterable style="width: 100%">
-                <el-option v-for="item in options.companyName" :key="item.id" :label="item.companyName" :value="item.id" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="商标系列">
-              <el-select v-model="formInline.seriesId" placeholder="请选择" clearable filterable style="width: 100%">
-                <el-option v-for="item in options.brandSeries" :key="item.id" :label="item.seriesName" :value="item.id" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="境内境外">
-              <el-select v-model="formInline.scopeType" placeholder="请选择" clearable style="width: 100%">
-                <el-option label="境内" :value="0" />
-                <el-option label="境外" :value="1" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="是否有效">
-              <el-select v-model="formInline.isValid" placeholder="请选择" clearable style="width: 100%">
-                <el-option label="无效" :value="0" />
-                <el-option label="有效" :value="1" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="代理人">
-              <el-select v-model="formInline.agensecId" placeholder="请选择" clearable filterable style="width: 100%">
-                <el-option v-for="item in options.agent" :key="item.id" :label="item.agent" :value="item.id" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="负责人">
-              <el-input v-model="formInline.manager" placeholder="请输入" clearable />
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="商标备注">
-              <el-input v-model="formInline.brandRemarks" placeholder="请输入" clearable />
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="续展状态">
-              <el-select v-model="formInline.renewalStatus" placeholder="请选择" clearable style="width: 100%">
-                <el-option label="未续展" :value="0" />
-                <el-option label="已续展" :value="1" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="转让状态">
-              <el-select v-model="formInline.transferStatus" placeholder="请选择" clearable style="width: 100%">
-                <el-option label="未转让" :value="0" />
-                <el-option label="已转让" :value="1" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="正本存储">
-              <el-select v-model="formInline.storageId" placeholder="请选择" clearable filterable style="width: 100%">
-                <el-option v-for="item in options.originalStorage" :key="item.id" :label="item.address" :value="item.id" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="首次申请">
-              <el-date-picker v-model="formInline.firssecApplyDate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" clearable style="width: 100%" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="注册证日期">
-              <el-date-picker v-model="formInline.registrationDate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" clearable style="width: 100%" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="续展申请">
-              <el-date-picker v-model="formInline.renewalDate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" clearable style="width: 100%" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="有效期" style="width: 100%">
-              <el-date-picker
-                v-model="validityDateRange"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="结束日期"
-                value-format="YYYY-MM-DD"
-                clearable
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-    </div>
+      <!-- 操作按钮栏 -->
+      <div class="action-bar">
+        <div class="action-left">
+          <el-button class="btn-outline" @click="handleExport">导出excel</el-button>
+        </div>
+        <div class="action-right">
+          <span class="note-text">注：未注册/注册失败的商标，单据编号为商标申请注册编号；已注册成功的商标，单据编号为商标注册编号。</span>
+        </div>
+      </div>
 
-    <!-- 表格 -->
-    <el-table
-      v-loading="tableLoading"
-      class="table dataTable"
-      stripe
-      border
-      :header-cell-style="tableOptions.headStyle"
-      :data="list"
-    >
-      <el-table-column type="selection" align="center" width="55" />
-      <template v-for="col in displayColumns" :key="col.prop">
-        <el-table-column
-          :label="col.label"
-          :width="col.width"
-          :align="col.align || 'center'"
-          show-overflow-tooltip
-        >
-          <template #default="scope">
-            <img
-              v-if="col.isImage && scope.row[col.prop]"
-              :src="scope.row[col.prop]"
-              class="brandPic"
-            >
-            <span v-else-if="col.isImage">-</span>
-            <span v-else>{{ formatCell(scope.row, col) }}</span>
-          </template>
-        </el-table-column>
-      </template>
-      <el-table-column align="center" label="操作" width="100" fixed="right">
-        <template #default="scope">
-          <el-button link type="primary" @click="handleDetail(scope.row)">详情</el-button>
-          <!-- <el-button link type="primary" @click="handleEditForm(scope.row)">编辑</el-button>
-          <el-popconfirm title="确认删除？" @confirm="handleDelete(scope.row)">
-            <template #reference>
-              <el-button type="danger" link>删除</el-button>
+      <!-- 表格 -->
+      <div class="table-wrapper">
+        <el-table v-loading="tableLoading" class="dataTable" :header-cell-style="tableOptions.headStyle" :cell-style="tableOptions.cellStyle" :data="list" @selection-change="handleSelectionChange">
+          <el-table-column type="selection" align="center" width="55" />
+          <el-table-column type="index" align="center" label="序号" width="80" :index="(index) => (queryOptions.page - 1) * queryOptions.pageSize + index + 1" />
+          <el-table-column align="center" label="商标申请/注册编号" min-width="160" show-overflow-tooltip>
+            <template #default="scope">
+              <el-button v-if="docNo(scope.row)" type="primary" link @click="handleDetail(scope.row)">{{ docNo(scope.row) }}</el-button>
+              <span v-else>-</span>
             </template>
-          </el-popconfirm> -->
-        </template>
-      </el-table-column>
-    </el-table>
+          </el-table-column>
+          <el-table-column align="center" label="注册状态" width="110">
+            <template #default="scope">{{ registerStatusMap[regStatus(scope.row)] }}</template>
+          </el-table-column>
+          <el-table-column align="center" label="境内/境外" width="100">
+            <template #default="scope">{{ scope.row.scopeType !== null && scope.row.scopeType !== undefined ? scopeTypeMap[scope.row.scopeType] || '-' : '-' }}</template>
+          </el-table-column>
+          <el-table-column align="center" label="所属国家/地区" width="130" show-overflow-tooltip>
+            <template #default="scope">{{ maps.countryRegion[scope.row.countryRegionId] || '-' }}</template>
+          </el-table-column>
+          <el-table-column align="center" label="商标系列" width="130" show-overflow-tooltip>
+            <template #default="scope">{{ maps.series[scope.row.seriesId] || '-' }}</template>
+          </el-table-column>
+          <el-table-column align="center" label="商标申请/注册人" min-width="160" show-overflow-tooltip>
+            <template #default="scope">{{ applicant(scope.row) }}</template>
+          </el-table-column>
+          <el-table-column align="center" label="申请/注册日期" width="140">
+            <template #default="scope">{{ formatDate(applyDate(scope.row)) }}</template>
+          </el-table-column>
+        </el-table>
+      </div>
 
-    <!-- 分页 -->
-    <el-pagination
-      background
-      layout="total, sizes, prev, pager, next, jumper"
-      :current-page="queryOptions.page"
-      :page-size="queryOptions.pageSize"
-      :page-sizes="tableOptions.pageSizes"
-      :total="tableOptions.total"
-      @size-change="(val) => handlePageChange(val, 1)"
-      @current-change="(val) => handlePageChange(val, 2)"
-    />
+      <!-- 分页 -->
+      <div class="pagination-bar">
+        <span class="pagination-info">共 {{ tableOptions.total }} 条记录 第 {{ queryOptions.page }} / {{ pageCount }} 页</span>
+        <el-pagination
+          background
+          layout="sizes, prev, pager, next, jumper"
+          :current-page="queryOptions.page"
+          :page-size="queryOptions.pageSize"
+          :page-sizes="tableOptions.pageSizes"
+          :total="tableOptions.total"
+          @size-change="(val) => handlePageChange(val, 1)"
+          @current-change="(val) => handlePageChange(val, 2)"
+        />
+      </div>
 
-    <!-- 表单弹框 -->
-    <BrandForm
-      v-model:show="showForm"
-      :item="formItem"
-      :options="options"
-      @confirm="handleResetTable"
-      @cancel="handleResetTable"
-    />
-    <!-- 详情弹框 -->
-    <BrandDetail ref="detailRef" />
-    <!-- 列设置弹框 -->
-    <ColumnSettings
-      v-model:show="showColumnSettings"
-      :columns="baseColumns"
-      @confirm="handleColumnUpdate"
-    />
+    </div>
   </div>
 </template>
 
 <script setup>
-import BrandForm from './form.vue'
-import BrandDetail from './detail.vue'
-import ColumnSettings from './columnSettings.vue'
-import { columnConfig, applyStatusMap, registerTypeMap, scopeTypeMap, isValidMap, renewalStatusMap, transferStatusMap } from './config'
-import { brBrandDel, brBrandGetList, brBrandSearch } from '@/api/trademark/br/brBrand'
+import { registerStatusMap, registerStatusOptions, scopeTypeMap, scopeOptions } from './config'
+import { brBrandSearch } from '@/api/trademark/br/brBrand'
 import { agentGetList } from '@/api/trademark/bd/agent'
 import { companyNameGetList } from '@/api/trademark/bd/companyName'
 import { countryRegionGetList } from '@/api/trademark/bd/countryRegion'
@@ -240,107 +108,29 @@ import { brandSeriesGetList } from '@/api/trademark/bd/brandSeries'
 import { brandCategoryGetList } from '@/api/trademark/bd/brandCategory'
 import { originalStorageGetList } from '@/api/trademark/bd/originalStorage'
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { Search } from '@element-plus/icons-vue'
 
-const DEFAULT_COLUMNS_KEY = 'trademarkBrandColumns'
-const CUSTOM_COLUMNS_KEY = 'trademarkBrandColumnsCustom'
-
-const showForm = ref(false)
-const showColumnSettings = ref(false)
-const showFilter = ref(false)
-const formItem = ref({})
+const router = useRouter()
 const tableLoading = ref(false)
 const list = ref([])
-const detailRef = ref(null)
+const dateRange = ref([])
+const selectedRows = ref([])
 
-const validityDateRange = ref([])
-
-const formInline = ref({
-  brandNo: '',
-  applyNo: '',
-  applyStatus: null,
-  registerType: null,
-  countryRegionId: null,
-  companyId: null,
-  seriesId: null,
-  scopeType: null,
-  isValid: null,
-  agensecId: null,
-  manager: '',
-  brandRemarks: '',
-  renewalStatus: null,
-  transferStatus: null,
-  storageId: null,
-  firssecApplyDate: '',
-  registrationDate: '',
-  renewalDate: '',
-})
-
+const formInline = ref({ keyword: '', registerStatus: null, scopeType: null, countryRegionId: null })
 const queryOptions = ref({ page: 1, pageSize: 10 })
 const tableOptions = ref({
-  headStyle: { background: '#EEF3FF', color: '#333333' },
-  pageSizes: [5, 10, 30, 50, 100],
+  headStyle: { background: '#FAFAFA', color: '#000', fontWeight: '600', height: '54px' },
+  cellStyle: { height: '54px' },
+  pageSizes: [5, 10, 20, 50],
   total: 0,
 })
+const options = ref({ countryRegion: [] })
+const maps = ref({ countryRegion: {}, company: {}, series: {}, agent: {}, storage: {}, scope: {} })
 
-// 关联下拉数据
-const options = ref({
-  agent: [],
-  companyName: [],
-  countryRegion: [],
-  brandSeries: [],
-  brandCategory: [],
-  originalStorage: [],
-})
+const pageCount = computed(() => Math.max(1, Math.ceil(tableOptions.value.total / queryOptions.value.pageSize)))
 
-// 关联 id -> 名称 映射
-const maps = ref({
-  countryRegion: {},
-  company: {},
-  series: {},
-  agent: {},
-  storage: {},
-  scope: {},
-})
-
-// 枚举映射
-const enumMaps = {
-  applyStatus: applyStatusMap,
-  registerType: registerTypeMap,
-  scopeType: scopeTypeMap,
-  isValid: isValidMap,
-  renewalStatus: renewalStatusMap,
-  transferStatus: transferStatusMap,
-}
-
-// 列配置
-const baseColumns = ref(columnConfig.map((col) => ({ ...col })))
-const displayColumns = computed(() => baseColumns.value.filter((col) => col.show !== false))
-
-onMounted(() => {
-  if (!localStorage.getItem(DEFAULT_COLUMNS_KEY)) {
-    localStorage.setItem(DEFAULT_COLUMNS_KEY, JSON.stringify(columnConfig))
-  }
-  const custom = localStorage.getItem(CUSTOM_COLUMNS_KEY)
-  if (custom) {
-    try {
-      const saved = JSON.parse(custom)
-      // Merge: use latest config properties, but keep custom show/order
-      const configMap = {}
-      columnConfig.forEach(col => { configMap[col.prop] = col })
-      baseColumns.value = saved
-        .filter(col => configMap[col.prop])
-        .map(col => ({ ...configMap[col.prop], show: col.show }))
-    } catch (e) { console.error(e) }
-  }
-  loadOptions()
-  handleGetTable()
-})
-
-function toMap(list, field) {
-  const map = {}
-  list.forEach((item) => { map[item.id] = item[field] })
-  return map
-}
+onMounted(() => { loadOptions(); handleGetTable() })
 
 async function loadOptions() {
   try {
@@ -352,196 +142,212 @@ async function loadOptions() {
       brandCategoryGetList({ page: 1, pageSize: 1000 }),
       originalStorageGetList({ page: 1, pageSize: 1000 }),
     ])
-    options.value = {
-      agent: agentRes.data.list || [],
-      companyName: companyRes.data.list || [],
-      countryRegion: regionRes.data.list || [],
-      brandSeries: seriesRes.data.list || [],
-      brandCategory: categoryRes.data.list || [],
-      originalStorage: storageRes.data.list || [],
-    }
+    options.value.countryRegion = regionRes.data.list || []
     maps.value = {
       countryRegion: toMap(options.value.countryRegion, 'name'),
-      company: toMap(options.value.companyName, 'companyName'),
-      series: toMap(options.value.brandSeries, 'seriesName'),
-      agent: toMap(options.value.agent, 'agent'),
-      storage: toMap(options.value.originalStorage, 'address'),
-      scope: toMap(options.value.brandCategory, 'type'),
+      company: toMap(companyRes.data.list, 'companyName'),
+      series: toMap(seriesRes.data.list, 'seriesName'),
+      agent: toMap(agentRes.data.list, 'agent'),
+      storage: toMap(storageRes.data.list, 'address'),
+      scope: toMap(categoryRes.data.list, 'type'),
     }
   } catch (e) { console.error(e) }
 }
 
-function formatDate(val, full) {
+function toMap(list, field) {
+  const map = {}
+  ;(list || []).forEach(item => { map[item.id] = item[field] })
+  return map
+}
+
+// 注册状态：注册成功=申请状态1；注册失败=商标状态1/2/3；其余未注册
+function regStatus(row) {
+  if (row.applyStatus === 1) return 1
+  if (row.brandStatus === 1 || row.brandStatus === 2 || row.brandStatus === 3) return 2
+  return 0
+}
+
+// 单据编号：注册成功显示注册号，其余显示申请号
+function docNo(row) {
+  return row.applyStatus === 1 ? row.brandNo : row.applyNo
+}
+
+// 商标申请/注册人：注册成功显示注册人，其余显示申请人
+function applicant(row) {
+  return row.applyStatus === 1 ? (row.registerPerson || '-') : (row.applyPerson || '-')
+}
+
+// 申请/注册日期：注册成功显示注册时间，其余显示申请时间（创建时间）
+function applyDate(row) {
+  return row.applyStatus === 1 ? row.registrationDate : row.createTime
+}
+
+function handleGetTable() {
+  tableLoading.value = true
+  const params = { page: queryOptions.value.page, pageSize: queryOptions.value.pageSize }
+  if (formInline.value.keyword) params.keyword = formInline.value.keyword
+  if (formInline.value.registerStatus !== null && formInline.value.registerStatus !== undefined) params.registerStatus = formInline.value.registerStatus
+  if (formInline.value.scopeType !== null && formInline.value.scopeType !== undefined) params.scopeType = formInline.value.scopeType
+  if (formInline.value.countryRegionId !== null && formInline.value.countryRegionId !== undefined) params.countryRegionId = formInline.value.countryRegionId
+  if (dateRange.value && dateRange.value.length === 2) { params.applyDateStart = dateRange.value[0]; params.applyDateEnd = dateRange.value[1] }
+  brBrandSearch(params).then(res => {
+    console.log(res)
+    list.value = res.data.list || []
+    tableOptions.value.total = res.data.total || 0
+  }).catch(() => { list.value = []; tableOptions.value.total = 0 }).finally(() => { tableLoading.value = false })
+}
+
+function handleSearch() { queryOptions.value.page = 1; handleGetTable() }
+function handleClear() {
+  formInline.value = { keyword: '', registerStatus: null, scopeType: null, countryRegionId: null }
+  dateRange.value = []
+  queryOptions.value.page = 1
+  handleGetTable()
+}
+function handlePageChange(val, type) {
+  type === 1 ? (queryOptions.value.pageSize = val) : (queryOptions.value.page = val)
+  handleGetTable()
+}
+function handleSelectionChange(rows) { selectedRows.value = rows }
+function handleDetail(row) { router.push({ name: 'BrandDetail', query: { applyNo: row.applyNo } }) }
+function handleExport() { ElMessage.info('导出功能待实现') }
+
+function formatDate(val) {
   if (!val) return '-'
-  // Handle string dates
-  if (typeof val === 'string') {
-    const s = val.replace('T', ' ')
-    return full ? s.substring(0, 19) : s.substring(0, 10)
-  }
-  // Handle Date objects or timestamps - avoid timezone shift
+  if (typeof val === 'string') return val.substring(0, 10)
   const d = new Date(val)
   if (isNaN(d.getTime())) return String(val).substring(0, 10)
   const year = d.getFullYear()
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
-  if (full) {
-    const hours = String(d.getHours()).padStart(2, '0')
-    const mins = String(d.getMinutes()).padStart(2, '0')
-    const secs = String(d.getSeconds()).padStart(2, '0')
-    return `${year}-${month}-${day} ${hours}:${mins}:${secs}`
-  }
-  return `${year}-${month}-${day}`
-}
-
-function relationMap(prop) {
-  switch (prop) {
-    case 'countryRegionId': return maps.value.countryRegion
-    case 'companyId': return maps.value.company
-    case 'seriesId': return maps.value.series
-    case 'agensecId': return maps.value.agent
-    case 'storageId': return maps.value.storage
-    case 'producsecScopeId': return maps.value.scope
-    default: return null
-  }
-}
-
-function formatCell(row, col) {
-  const val = row[col.prop]
-  if (val === null || val === undefined || val === '') return '-'
-  if (col.isDate) return formatDate(val, col.isDateTime)
-  if (enumMaps[col.prop]) return enumMaps[col.prop][val] !== undefined ? enumMaps[col.prop][val] : val
-  const map = relationMap(col.prop)
-  if (map) return map[val] !== undefined ? map[val] : val
-  return val
-}
-
-function handleResetTable() {
-  queryOptions.value.page = 1
-  handleGetTable()
-}
-
-function handleGetTable() {
-  tableLoading.value = true
-  // 构造搜索参数，去掉空值
-  const params = { page: queryOptions.value.page, pageSize: queryOptions.value.pageSize }
-  Object.keys(formInline.value).forEach((k) => {
-    const v = formInline.value[k]
-    if (v !== null && v !== undefined && v !== '') params[k] = v
-  })
-  if (validityDateRange.value && validityDateRange.value.length === 2) {
-    params.validityStarsecDate = validityDateRange.value[0]
-    params.validityEndDate = validityDateRange.value[1]
-  }
-  brBrandSearch(params).then((res) => {
-    list.value = res.data.list
-    tableOptions.value.total = res.data.total
-  }).catch(() => {
-    brBrandGetList(queryOptions.value).then((res) => {
-      list.value = res.data.list
-      tableOptions.value.total = res.data.total
-    })
-  }).finally(() => { tableLoading.value = false })
-}
-
-function handleSearch() {
-  queryOptions.value.page = 1
-  handleGetTable()
-}
-
-function handleClear() {
-  formInline.value = {
-    brandNo: '', applyNo: '', applyStatus: null, registerType: null,
-    countryRegionId: null, companyId: null, seriesId: null, scopeType: null,
-    isValid: null, agensecId: null, manager: '', brandRemarks: '',
-    renewalStatus: null, transferStatus: null, storageId: null,
-    firssecApplyDate: '', registrationDate: '', renewalDate: '',
-  }
-  validityDateRange.value = []
-  handleGetTable()
-}
-
-function handlePageChange(val, type) {
-  type === 1 ? (queryOptions.value.pageSize = val) : (queryOptions.value.page = val)
-  handleGetTable()
-}
-
-function handleDetail(item) {
-  detailRef.value.show(item, maps.value)
-}
-
-function handleEditForm(item) {
-  formItem.value = item ? { ...item } : {}
-  showForm.value = true
-}
-
-function handleDelete(item) {
-  brBrandDel({ id: item.id }).then(() => {
-    ElMessage.success('删除成功')
-    handleGetTable()
-  })
-}
-
-function handleColumnUpdate(cols) {
-  baseColumns.value = cols
-  localStorage.setItem(CUSTOM_COLUMNS_KEY, JSON.stringify(cols))
+  return year + '-' + month + '-' + day
 }
 </script>
 
 <style lang="scss" scoped>
-.content {
-  padding: 20px;
-  margin-top: 20px;
-  box-sizing: border-box;
-  background-color: #FFFFFF;
+.banner {
+  padding: 10px;
+}
+.page-wrapper {
+  background-color: #fff;
+  border-radius: 5px;
+  min-height: 100%;
 
-  .quickSearch {
+  .page-header {
+    padding: 16px 0px 16px 32px;
+
+    .page-title {
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      font-size: 20px;
+      font-weight: 650;
+      color: rgba(0, 0, 0, 0.85);
+      line-height: 28px;
+      margin: 0;
+    }
+  }
+
+  .search-bar {
+    margin: 16px 32px 0;
+    background: #FFFFFF;
+    // border: 1px solid #E9E9E9;
+    padding: 12px 20px;
+
+    .search-form {
+      :deep(.el-form-item) {
+        margin-bottom: 20px;
+        margin-right: 16px;
+      }
+    }
+  }
+
+  .action-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    padding: 16px 32px 0;
 
-    .quickSearchLeft {
+    .action-left, .action-right {
       display: flex;
+      gap: 12px;
       align-items: center;
-      gap: 10px;
+    }
 
-      .quickLabel {
-        font-weight: 600;
-        font-size: 14px;
-        white-space: nowrap;
+    .note-text {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .btn-outline {
+      background: #FFFFFF;
+      color: #333333;
+      border: 1px solid #D9D9D9;
+      border-radius: 6px;
+      font-size: 16px;
+      padding: 8px 20px;
+      height: 38px;
+
+      &:hover {
+        color: #1890FF;
+        border-color: #1890FF;
       }
     }
-
-    .quickSearchRight {
-      display: flex;
-      gap: 10px;
-    }
   }
 
-  .filterForm {
-    padding: 15px 20px 0;
-    margin-bottom: 10px;
-    background: #fafafa;
+  .table-wrapper {
+    margin: 16px 32px 0;
+    background: #FFFFFF;
     border-radius: 4px;
 
-    :deep(.el-form-item) {
-      width: 100%;
-    }
-    :deep(.el-select) {
-      width: 100% !important;
+    .dataTable {
+      :deep(.el-table) {
+        border: none;
+      }
+      :deep(.el-table__header) {
+        th {
+          background: #FAFAFA;
+          height: 54px;
+          border: none;
+          border-bottom: 1px solid #EBEEF5;
+        }
+      }
+      :deep(.el-table__body) {
+        td {
+          height: 54px;
+          border: none;
+          border-bottom: 1px solid #EBEEF5;
+        }
+      }
+      :deep(.el-table::before) {
+        display: none;
+      }
     }
   }
 
-  .table {
-    margin: 10px 0;
+  .pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 32px;
+
+    .pagination-info {
+      font-size: 14px;
+      color: #666;
+    }
   }
 
-  .brandPic {
-    width: 80px;
-    height: 60px;
-    object-fit: contain;
-    border-radius: 4px;
-    vertical-align: middle;
+  .btn-search {
+    background: #1890FF;
+    border-color: #1890FF;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+
+  .btn-reset {
+    background: #FFFFFF;
+    border: 1px solid #D9D9D9;
+    border-radius: 6px;
+    font-size: 14px;
   }
 }
 </style>
