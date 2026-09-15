@@ -112,6 +112,16 @@ export const mainRoutes = [
         path:'/trademark/br/brand/detail',
         name:'BrandDetail',
         component:()=>import("@/views/trademark/br/brand/detail.vue")
+      },
+      {
+        path:'/trademark/ap/change/form',
+        name:'Change',
+        component:()=>import("@/views/trademark/ap/change/form.vue")
+      },
+      {
+        path:'/trademark/ap/change/confirm',
+        name:'ChangeConfirm',
+        component:()=>import("@/views/trademark/ap/change/confirm.vue")
       }
       // {
       //   path: 'dashboard',

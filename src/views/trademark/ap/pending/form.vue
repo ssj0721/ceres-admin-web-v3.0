@@ -253,9 +253,10 @@
           <div class="attachment-item">
             <label class="attachment-label">附件：</label>
             <div class="attachment-input">
-              <el-upload :auto-upload="false" :limit="5" :on-change="handleAttachmentChange">
-                <el-button class="btn-upload" plain>上传文件</el-button>
+              <el-upload :auto-upload="false" :limit="1" :on-change="(file) => handleOpinionUpload(file, 'attachment')" :on-remove="() => handleOpinionRemove('attachment')">
+                <el-button class="btn-upload" plain>{{ form.attachment ? '重新上传' : '上传文件' }}</el-button>
               </el-upload>
+              <span v-if="form.attachment" class="upload-status">已上传</span>
             </div>
           </div>
           <div class="attachment-item">
@@ -297,7 +298,8 @@ const pendingFiles = ref({
   agensecOpinionUrl: null,
   secretaryOpinionAttachment: null,
   legalOpinionAttachment: null,
-  businessOpinionAttachment: null
+  businessOpinionAttachment: null,
+  attachment: null
 })
 
 const categoryHeaderStyle = {
@@ -446,7 +448,7 @@ function handleBrandChange(file) {
   form.value.brandUrl = null
   // console.log('pendingFiles.value.brandUrl:', pendingFiles.value.brandUrl)
 }
-function handleAttachmentChange() {}
+// 附件与意见附件均为单文件，复用 handleOpinionUpload / handleOpinionRemove
 
 // 意见附件选择（暂存，保存时统一上传）
 function handleOpinionUpload(file, field) {
@@ -464,7 +466,7 @@ function handleOpinionRemove(field) {
 
 // 统一上传待上传文件
 async function uploadPendingFiles() {
-  const fields = ['brandUrl', 'agensecOpinionUrl', 'secretaryOpinionAttachment', 'legalOpinionAttachment', 'businessOpinionAttachment']
+  const fields = ['brandUrl', 'agensecOpinionUrl', 'secretaryOpinionAttachment', 'legalOpinionAttachment', 'businessOpinionAttachment', 'attachment']
   for (const field of fields) {
     const file = pendingFiles.value[field]
     if (file) {
