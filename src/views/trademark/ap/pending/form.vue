@@ -1,11 +1,11 @@
 <template>
-  <div class="form-page">
+  <div class="form-page" :class="{ 'is-readonly': isReadonly }">
     <div class="page-top">
       <h1 class="page-title">{{ isEdit ? "编辑申请" : "编制申请" }}</h1>
 
       <div class="topBtn">
-        <el-button class="btn-submit" @click="handleSave">保存</el-button>
-        <el-button class="btn-cancel" @click="handleSaveAndSubmit">保存并提交</el-button>
+        <el-button v-if="!isReadonly" class="btn-submit" :loading="saving" @click="handleSave">保存</el-button>
+        <el-button v-if="!isReadonly" class="btn-cancel" :loading="saving" @click="handleSaveAndSubmit">保存并提交</el-button>
         <el-button class="btn-cancel" @click="handleCancel">取消</el-button>
       </div>
     </div>
@@ -287,7 +287,11 @@ const route = useRoute()
 const router = useRouter()
 const formRef = ref(null)
 const isEdit = ref(false)
+// 仅待提交(0)可编辑；签批中/待确认/已确认为只读
+const isReadonly = ref(false)
 const editId = ref(null)
+// 保存/提交进行中标记，防止连点重复建单
+const saving = ref(false)
 // 各区块折叠状态（点击蓝色标题展开/收起）
 const collapsed = ref({ basic: false, brand: false, agent: false, opinion: false, attachment: false })
 function toggle(key) { collapsed.value[key] = !collapsed.value[key] }
@@ -369,6 +373,7 @@ async function loadEditData() {
       form.value.applyDepartment = data.basic.applyDepartment || ''
       form.value.applyScope = data.basic.applyScope
       form.value.remarks = data.basic.remarks || ''
+      isReadonly.value = data.basic.status !== 0
     }
     // 填充商标信息
     form.value.registerType = data.registerType
@@ -489,7 +494,7 @@ async function uploadPendingFiles() {
 function buildParam() {
   return {
     id: isEdit.value ? editId.value : undefined,
-    apBasicParam: { applyNumber:form.value.applyNumber || (Date.now()), applyDate:form.value.applyDate, applyScope:form.value.applyScope, applyPerson:form.value.applyPerson, applyDepartment:form.value.applyDepartment, remarks:form.value.remarks },
+    apBasicParam: { applyNumber:form.value.applyNumber || '', applyDate:form.value.applyDate, applyScope:form.value.applyScope, applyPerson:form.value.applyPerson, applyDepartment:form.value.applyDepartment, remarks:form.value.remarks },
     seriesId:form.value.seriesId, registerType:form.value.registerType, countryRegionId:form.value.countryRegionId,
     applyPerson:form.value.applyPerson, applyAddress:form.value.applyAddress, brandUrl:form.value.brandUrl,
     apAgentFeeParam: { agentId:form.value.agentFee.agentId, address:form.value.agentFee.address, outsideFee:form.value.agentFee.outsideFee, domesticFee:form.value.agentFee.domesticFee, agentFee:form.value.agentFee.agentFee, accountName:form.value.agentFee.accountName, bankName:form.value.agentFee.bankName, bankNumber:form.value.agentFee.bankNumber, payCompany:form.value.agentFee.payCompany },
@@ -500,56 +505,67 @@ function buildParam() {
 }
 
 async function doSave() {
+  if (saving.value) return false
+  saving.value = true
   try {
     // 先验证表单
-    await formRef.value.validate()
+    try {
+      await formRef.value.validate()
+    } catch (e) {
+      ElMessage.error('请完善表单')
+      return false
+    }
     // 上传待上传文件
     await uploadPendingFiles()
     // 保存表单
     const param = buildParam()
-    console.log("Yes")
-    console.log(param)
     if (isEdit.value) {
       await registerUpdate(param)
     } else {
-      await registerAdd(param)
+      // 新建保存成功后立即转为编辑模式，之后的保存都走更新，避免重复建单
+      const res = await registerAdd(param)
+      const data = res && res.data
+      // 兼容后端返回：{id, applyNo} 或旧版纯ID
+      const newId = data && typeof data === 'object' ? data.id : data
+      if (newId) {
+        isEdit.value = true
+        editId.value = newId
+      }
+      // 回填后端返回的申请编号（后续保存复用同一编号，后端幂等即可命中）
+      const newApplyNo = data && typeof data === 'object' ? data.applyNo : ''
+      form.value.applyNumber = String(newApplyNo || param.apBasicParam.applyNumber || '')
+      if (newId && Number(route.query.id) !== Number(newId)) {
+        router.replace({ query: { ...route.query, id: newId } })
+      }
     }
     ElMessage.success('保存成功')
     return true
   } catch (e) {
+    // 失败原因（如：当前单据已送批，无法修改）已由请求拦截器统一提示
     console.error(e)
-    if (e.message && !e.message.includes('上传失败')) {
-      ElMessage.error('请完善表单')
-    }
     return false
+  } finally {
+    saving.value = false
   }
 }
 
 function handleSave(){doSave()}
 
 async function handleSaveAndSubmit(){
-  try{
-    // 先验证表单
-    await formRef.value.validate()
-    // 上传待上传文件
-    await uploadPendingFiles()
-    let registerId = editId.value
-    if (isEdit.value) {
-      // 已保存过：只调用提交，不调用保存
-    } else {
-      // 新建：先保存再提交
-      const param = buildParam()
-      const res = await registerAdd(param)
-      if(res && res.data && res.data.id) registerId = res.data.id
-    }
-    if (registerId) await registerSubmit(registerId)
+  if (saving.value) return
+  // 先保存（新建即创建、已有单据即更新），保存失败则中止提交
+  const ok = await doSave()
+  if (!ok) return
+  saving.value = true
+  try {
+    await registerSubmit(editId.value)
     ElMessage.success('提交成功')
     router.back()
-  }catch(e){
+  } catch (e) {
+    // 失败原因（如：当前单据已送批）已由请求拦截器统一提示
     console.error(e)
-    if (e.message && !e.message.includes('上传失败')) {
-      ElMessage.error('请完善表单')
-    }
+  } finally {
+    saving.value = false
   }
 }
 
@@ -841,5 +857,16 @@ function handleCancel(){router.back()}
 .btn-circle {
   border-radius: 100%;
   padding: 5px;
+}
+
+.form-page.is-readonly :deep(input),
+.form-page.is-readonly :deep(textarea),
+.form-page.is-readonly :deep(.el-select),
+.form-page.is-readonly :deep(.el-date-editor),
+.form-page.is-readonly :deep(.el-upload),
+.form-page.is-readonly :deep(.el-radio-group),
+.form-page.is-readonly :deep(.el-input-number) {
+  pointer-events: none;
+  opacity: .7;
 }
 </style>

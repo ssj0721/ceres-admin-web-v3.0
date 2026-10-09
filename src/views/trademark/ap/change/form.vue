@@ -3,8 +3,8 @@
     <div class="page-top">
       <h1 class="page-title">{{ isEdit ? "编辑申请" : "编制申请" }}</h1>
       <div class="topBtn">
-        <el-button v-if="canSave" class="btn-submit" @click="handleSave">保存</el-button>
-        <el-button v-if="canSave" class="btn-cancel" @click="handleSaveAndSubmit">保存并提交</el-button>
+        <el-button v-if="canSave" class="btn-submit" :loading="saving" @click="handleSave">保存</el-button>
+        <el-button v-if="canSave" class="btn-cancel" :loading="saving" @click="handleSaveAndSubmit">保存并提交</el-button>
         <el-button class="btn-cancel" @click="handleCancel">取消</el-button>
       </div>
     </div>
@@ -228,6 +228,8 @@ const basicStatus = ref(null) // 编辑模式基础状态：0待提交 1签批�
 const canSave = computed(() => !isEdit.value || basicStatus.value === 0)
 const editBasicId = ref(null)   // 编辑模式：申请基本信息ID（提交/审批用）
 const editChangeId = ref(null)  // 编辑模式：变更申请ID（update 用）
+// 保存/提交进行中标记，防止连点重复建单
+const saving = ref(false)
 const collapsed = ref({ basic: false, brand: false, agent: false, opinion: false, attachment: false })
 function toggle(key) { collapsed.value[key] = !collapsed.value[key] }
 
@@ -471,7 +473,7 @@ function buildParam() {
     id: isEdit.value ? editChangeId.value : undefined,
     brandId: (brand.value && brand.value.id) || Number(route.query.brandId),
     apBasicParam: {
-      applyNumber: form.value.applyNumber || Date.now(),
+      applyNumber: form.value.applyNumber || '',
       applyDate: form.value.applyDate,
       applyScope: form.value.applyScope,
       applyPerson: form.value.applyPerson,
@@ -501,53 +503,73 @@ function buildParam() {
 }
 
 async function doSave() {
-  checkScopeFormat()
-  if (scopeFormatError.value) {
-    ElMessage.error(scopeFormatError.value)
-    return
-  }
-  await formRef.value.validate()
-  await uploadPendingFiles()
-  const param = buildParam()
-  if (isEdit.value) {
-    await brandChangeUpdate(param)
-  } else {
-    const res = await brandChangeAdd(param)
-    if (res && res.data) editBasicId.value = res.data
-  }
-  ElMessage.success('保存成功')
-}
-
-function handleSave() {
-  doSave().catch(e => {
-    console.error(e)
-    if (e.message && !e.message.includes('上传失败')) ElMessage.error('请完善表单')
-  })
-}
-
-async function handleSaveAndSubmit() {
+  if (saving.value) return false
+  saving.value = true
   try {
     checkScopeFormat()
     if (scopeFormatError.value) {
       ElMessage.error(scopeFormatError.value)
-      return
+      return false
     }
-    await formRef.value.validate()
+    try {
+      await formRef.value.validate()
+    } catch (e) {
+      ElMessage.error('请完善表单')
+      return false
+    }
     await uploadPendingFiles()
     const param = buildParam()
-    let basicId = editBasicId.value
     if (isEdit.value) {
       await brandChangeUpdate(param)
     } else {
+      // 新建保存成功后立即转为编辑模式，之后的保存都走更新，避免重复建单
       const res = await brandChangeAdd(param)
-      if (res && res.data) basicId = res.data
+      const data = res && res.data
+      // 兼容后端返回：{id, applyNo} 或旧版纯ID
+      const newId = data && typeof data === 'object' ? data.id : data
+      if (newId) {
+        editBasicId.value = newId
+        editChangeId.value = newId
+        isEdit.value = true
+        basicStatus.value = 0
+      }
+      // 回填后端返回的申请编号（后续保存复用同一编号，后端幂等即可命中）
+      const newApplyNo = data && typeof data === 'object' ? data.applyNo : ''
+      form.value.applyNumber = String(newApplyNo || param.apBasicParam.applyNumber || '')
+      if (newId && Number(route.query.id) !== Number(newId)) {
+        router.replace({ query: { ...route.query, id: newId } })
+      }
     }
-    if (basicId) await brandChangeSubmit(basicId)
+    ElMessage.success('保存成功')
+    return true
+  } catch (e) {
+    // 失败原因（如：当前单据已送批，无法修改）已由请求拦截器统一提示
+    console.error(e)
+    return false
+  } finally {
+    saving.value = false
+  }
+}
+
+function handleSave() {
+  doSave()
+}
+
+async function handleSaveAndSubmit() {
+  if (saving.value) return
+  // 先保存（新建即创建、已有单据即更新），保存失败则中止提交
+  const ok = await doSave()
+  if (!ok) return
+  saving.value = true
+  try {
+    await brandChangeSubmit(editBasicId.value)
     ElMessage.success('提交成功')
     router.back()
   } catch (e) {
+    // 失败原因（如：当前单据已送批）已由请求拦截器统一提示
     console.error(e)
-    if (e.message && !e.message.includes('上传失败')) ElMessage.error('请完善表单')
+  } finally {
+    saving.value = false
   }
 }
 

@@ -31,9 +31,9 @@
       <el-checkbox v-model="ruleForm.rememberMe" style="margin: 0 0 25px 0"
         >自动登录</el-checkbox
       >
-      <div class="forgetPsd" @click="() => $emit('forgetPassword')">
+      <!-- <div class="forgetPsd" @click="() => $emit('forgetPassword')">
         忘记密码
-      </div>
+      </div> -->
     </div>
 
     <el-form-item style="width: 100%">

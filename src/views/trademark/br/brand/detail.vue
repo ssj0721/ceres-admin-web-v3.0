@@ -118,7 +118,7 @@
             <template #default="scope">{{ scope.row.confirmPerson || '-' }}</template>
           </el-table-column>
           <el-table-column align="center" label="确认时间" width="170">
-            <template #default="scope">{{ text(scope.row.confirmTime) }}</template>
+            <template #default="scope">{{ fmtDateTime(scope.row.confirmTime) }}</template>
           </el-table-column>
           <template #empty><div class="empty-cell">暂无数据</div></template>
         </el-table>
@@ -171,7 +171,7 @@ const lifecycleRows = computed(() => {
       applyNumber: b ? b.applyNumber : '',
       status: b ? b.status : null,
       applyPerson: b ? b.applyPerson : r.applyPerson,
-      applyTime: b ? b.createTime : r.createTime,
+      applyTime: (b && b.createTime) ? b.createTime : r.createTime,
       confirmPerson: r.registerPerson,
       confirmTime: r.registrationDate,
     }
@@ -207,6 +207,18 @@ function text(val) {
 function fmtDateTime(val) {
   if (!val) return '-'
   if (typeof val === 'string') return val.replace('T', ' ').substring(0, 16)
+  if (typeof val === 'object') {
+    const p2 = n => String(n).padStart(2, '0')
+    const y = val.year
+    const mo = val.monthValue || val.month
+    const dd = val.dayOfMonth || val.day
+    if (y && mo && dd) {
+      return val.hour != null
+        ? `${y}-${p2(mo)}-${p2(dd)} ${p2(val.hour)}:${p2(val.minute)}`
+        : `${y}-${p2(mo)}-${p2(dd)}`
+    }
+    return '-'
+  }
   const d = new Date(val)
   if (isNaN(d.getTime())) return String(val).substring(0, 16)
   const p = n => String(n).padStart(2, '0')

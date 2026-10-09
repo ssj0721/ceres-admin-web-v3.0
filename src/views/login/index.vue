@@ -3,7 +3,7 @@
     <!-- 登录 -->
     <div v-if="getPassword" class="loginBox">
       <div class="topText">
-      {{permission == "true" ? "联营商登录" : "大投登录"}}
+      {{permission == "true" ? "商标管理系统" : "大投登录"}}
       </div>
       <el-tabs v-model="tabs.activeName">
         <el-tab-pane label="账户密码登录" name="account">
@@ -12,17 +12,17 @@
             @forgetPassword="getPassword = false"
           />
         </el-tab-pane>
-        <el-tab-pane label="手机号码登录" name="phone">
+        <!-- <el-tab-pane label="手机号码登录" name="phone">
           <PhoneLogin class="login-form" />
-        </el-tab-pane>
+        </el-tab-pane> -->
       </el-tabs>
     </div>
 
     <!-- 找回密码 -->
-    <RebackPassword
+    <!-- <RebackPassword
       v-else
       @backToLogin="() => getPassword = true"
-    />
+    /> -->
     <!--  底部  -->
     <div class="login-footer">SCM V1.01.00 © 2025 旭日信息科技（惠州）有限公司 All Rights Reserved. <a href="https://beian.miit.gov.cn/" target="blank">粤ICP备2025457458号</a></div>
   </div>
@@ -95,7 +95,7 @@ const permission = import.meta.env.VITE_PERMISSION  // 区分是供应连true还
   text-align: center;
   position: absolute;
   top: -70px;
-  left: 105px;
+  left: 65px;
 }
 .login {
   height: 100%;

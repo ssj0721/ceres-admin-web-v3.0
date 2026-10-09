@@ -84,7 +84,7 @@
           <el-table-column prop="updateTime" align="center" label="最新操作时间" width="170" show-overflow-tooltip>
             <template #default="scope">{{ formatDate(scope.row.updateTime) }}</template>
           </el-table-column>
-          <el-table-column align="center" label="操作" width="160" fixed="right">
+          <el-table-column v-if="activeTab !== 3" align="center" label="操作" width="160" fixed="right">
             <template #default="scope">
               <el-button v-if="activeTab === 0" type="primary" link @click="handleSubmit(scope.row)">提交</el-button>
               <el-button v-if="activeTab === 0" type="danger" link @click="handleDelete(scope.row)">删除</el-button>
@@ -119,7 +119,7 @@
 
 <script setup>
 import CreateDialog from './createDialog.vue'
-import { basicGetList } from '@/api/trademark/ap/basic'
+import { basicGetList, basicDelete, basicDeleteBatch } from '@/api/trademark/ap/basic'
 import { registerSubmit, registerUnapprove } from '@/api/trademark/ap/register'
 import { brandChangeSubmit, brandChangeUnapprove } from '@/api/trademark/ap/brandChange'
 import { tabList, detailTypeMap, typeOptions, scopeMap, scopeOptions } from '../config'
@@ -197,19 +197,29 @@ function handleSubmit(row) {
 }
 
 function handleDelete(row) {
-  ElMessageBox.confirm('确认删除该申请？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }).then(() => {
-    // TODO: 调用删除接口
-    ElMessage.success('删除成功')
-    handleGetTable()
+  ElMessageBox.confirm('确认删除该申请？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }).then(async () => {
+    try {
+      await basicDelete(row.id)
+      ElMessage.success('删除成功')
+    } catch (e) {
+      // 失败原因（如：当前单据已送批/已删除）已由请求拦截器统一提示
+    } finally {
+      handleGetTable()
+    }
   }).catch(() => {})
 }
 
 function handleBatchDelete() {
   if (selectedRows.value.length === 0) return ElMessage.warning('请先选择要删除的记录')
-  ElMessageBox.confirm('确认删除选中的 ' + selectedRows.value.length + ' 条记录？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }).then(() => {
-    // TODO: 调用批量删除接口
-    ElMessage.success('批量删除成功')
-    handleGetTable()
+  ElMessageBox.confirm('确认删除选中的 ' + selectedRows.value.length + ' 条记录？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }).then(async () => {
+    try {
+      await basicDeleteBatch(selectedRows.value.map(row => row.id))
+      ElMessage.success('批量删除成功')
+    } catch (e) {
+      // 失败原因已由请求拦截器统一提示
+    } finally {
+      handleGetTable()
+    }
   }).catch(() => {})
 }
 
@@ -373,7 +383,7 @@ function formatDate(val) {
 
     .search-form {
       :deep(.el-form-item) {
-        margin-bottom: 0;
+        margin-bottom: 10px;
         margin-right: 16px;
       }
     }
