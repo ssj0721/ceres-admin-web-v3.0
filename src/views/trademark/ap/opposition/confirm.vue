@@ -1,0 +1,334 @@
+<template>
+  <div class="form-page">
+    <div class="page-top">
+      <h1 class="page-title">编制确认表</h1>
+      <div class="topBtn">
+        <el-button v-if="!isReadonly" class="btn-submit" :loading="saving" @click="handleSave">保存</el-button>
+        <el-button v-if="!isReadonly" class="btn-cancel" :loading="saving" @click="handleSaveAndSubmit">保存并提交</el-button>
+        <el-button class="btn-cancel" @click="handleCancel">取消</el-button>
+      </div>
+    </div>
+
+    <el-form class="mainForm" :disabled="isReadonly">
+      <!-- 基本信息（只读表格） -->
+      <div class="section">
+        <div class="section-header" @click="toggle('basic')">
+          <span class="section-title"><span class="section-bar"></span>基本信息</span>
+          <el-icon class="collapse-icon" :class="{ collapsed: collapsed.basic }"><DArrowRight /></el-icon>
+        </div>
+        <div v-show="!collapsed.basic" class="info-table">
+          <table class="basic-info-table">
+            <tr><td class="label-cell">申请类型</td><td class="value-cell">商标异议申请</td><td class="label-cell">申请编号</td><td class="value-cell link">{{ basic.applyNumber }}</td></tr>
+            <tr><td class="label-cell">单据申请人</td><td class="value-cell">{{ basic.applyPerson }}</td><td class="label-cell">申请日期</td><td class="value-cell">{{ basic.applyDate }}</td></tr>
+            <tr><td class="label-cell">申请部门</td><td class="value-cell">{{ basic.applyDepartment }}</td><td class="label-cell"></td><td class="value-cell"></td></tr>
+            <tr><td class="label-cell">备注</td><td class="value-cell" colspan="3">{{ basic.remarks }}</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- 商标信息（申请信息 | 确认信息） -->
+      <div class="section">
+        <div class="section-header" @click="toggle('brand')">
+          <span class="section-title"><span class="section-bar"></span>商标信息</span>
+          <el-icon class="collapse-icon" :class="{ collapsed: collapsed.brand }"><DArrowRight /></el-icon>
+        </div>
+        <div v-show="!collapsed.brand" class="info-table">
+          <table class="confirm-info-table">
+            <thead><tr><th style="width:180px"></th><th style="width:300px">申请信息</th><th style="width:180px">* 确认信息</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="label-cell">商标注册编号</td><td class="value-cell link">{{ appInfo.trademarkRegisterNo }}</td><td class="label-cell">/</td><td class="value-cell">/</td></tr>
+              <tr><td class="label-cell">境内/境外</td><td class="value-cell">{{ appInfo.scopeLabel }}</td><td class="label-cell">/</td><td class="value-cell">/</td></tr>
+              <tr><td class="label-cell">所属地区/国家</td><td class="value-cell"><img v-if="appInfo.brandPicUrl" :src="appInfo.brandPicUrl" class="brand-thumb" />{{ appInfo.countryRegion }}</td><td class="label-cell req-label">* 商标所属国家/地区</td><td class="value-cell"><el-select v-model="form.confirmCountryRegion" placeholder="请选择" style="width:100%" :disabled="isReadonly"><el-option label="全部" value="全部" /><el-option v-for="item in options.countryRegion" :key="item.id" :label="item.name" :value="item.name" /></el-select></td></tr>
+              <tr><td class="label-cell">/</td><td class="value-cell"></td><td class="label-cell req-label">* 异议提交日</td><td class="value-cell"><el-date-picker v-model="form.objectionSubmitDate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width:100%" :disabled="isReadonly" /></td></tr>
+              <tr><td class="label-cell">被异议商标</td><td class="value-cell"><img v-if="appInfo.brandPicUrl" :src="appInfo.brandPicUrl" class="brand-thumb" /></td><td class="label-cell">/</td><td class="value-cell">/</td></tr>
+              <tr><td class="label-cell">异议人</td><td class="value-cell">{{ appInfo.objector }}</td><td class="label-cell req-label">* 被异议人</td><td class="value-cell"><el-input v-model="form.confirmOpposedPerson" placeholder="请输入" :disabled="isReadonly" /></td></tr>
+              <tr><td class="label-cell">商标申请人</td><td class="value-cell">{{ appInfo.applyPerson }}</td><td class="label-cell req-label">* 异议人</td><td class="value-cell"><el-input v-model="form.confirmObjector" placeholder="请输入" :disabled="isReadonly" /></td></tr>
+              <tr><td class="label-cell">异议理由</td><td class="value-cell">{{ appInfo.objectionReason }}</td><td class="label-cell req-label">* 异议理由</td><td class="value-cell"><el-input v-model="form.confirmObjectionReason" placeholder="请输入" :disabled="isReadonly" /></td></tr>
+              <tr><td class="label-cell">引证商标</td><td class="value-cell"></td><td class="label-cell req-label">* 引证商标</td><td class="value-cell"><el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleFilePick(f, 'confirmCitedBrandPicUrl')"><el-button class="btn-upload" plain>上传图片</el-button></el-upload><img v-if="citedBrandPreview" :src="citedBrandPreview" class="brand-thumb" /></td></tr>
+              <tr><td class="label-cell">/</td><td class="value-cell"></td><td class="label-cell req-label">* 异议结果</td><td class="value-cell"><el-select v-model="form.objectionResult" placeholder="请选择" style="width:100%" :disabled="isReadonly"><el-option label="成立" value="成立" /><el-option label="不成立" value="不成立" /><el-option label="部分成立" value="部分成立" /></el-select></td></tr>
+              <tr><td class="label-cell">类别数量</td><td class="value-cell">{{ appInfo.classCount }}</td><td class="label-cell req-label">* 类别数量</td><td class="value-cell"><el-input v-model="form.confirmClassCount" placeholder="请输入" :disabled="isReadonly" /></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 类别子表（确认侧含受理结果和备注） -->
+        <div v-show="!collapsed.brand" class="categoryTable">
+          <el-table :data="form.categories" :header-cell-style="changeHeaderStyle" :cell-style="{ height: '50px' }">
+            <el-table-column type="index" label="序号" width="60" align="center" />
+            <el-table-column label="类别编号" width="120" align="center">
+              <template #default="scope"><el-input v-model="scope.row.categoryNo" placeholder="请输入" :disabled="isReadonly" /></template>
+            </el-table-column>
+            <el-table-column label="异议商品/服务项目" min-width="300">
+              <template #default="scope"><el-input v-model="scope.row.productService" placeholder="请输入" :disabled="isReadonly" /></template>
+            </el-table-column>
+            <el-table-column label="确认受理结果" width="160" align="center">
+              <template #default="scope">
+                <el-select v-model="scope.row.acceptanceResult" placeholder="选择受理结果" style="width:100%" :disabled="isReadonly">
+                  <el-option label="通过" value="通过" />
+                  <el-option label="不通过" value="不通过" />
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="备注" min-width="200">
+              <template #default="scope"><el-input v-model="scope.row.remark" placeholder="请输入" :disabled="isReadonly" /></template>
+            </el-table-column>
+            <el-table-column label="操作" width="140" align="center">
+              <template #default="scope">
+                <div class="category-actions">
+                  <el-button class="btn-circle" @click="addCategory(scope.$index)" :disabled="isReadonly"><el-icon><Plus /></el-icon></el-button>
+                  <el-button class="btn-circle" @click="removeCategory(scope.$index)" :disabled="isReadonly || form.categories.length <= 1"><el-icon><Minus /></el-icon></el-button>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </div>
+
+      <!-- 批件与意见信息 -->
+      <div class="section">
+        <div class="section-header" @click="toggle('opinion')">
+          <span class="section-title"><span class="section-bar"></span>批件与意见信息</span>
+          <el-icon class="collapse-icon" :class="{ collapsed: collapsed.opinion }"><DArrowRight /></el-icon>
+        </div>
+        <div v-show="!collapsed.opinion" class="form-grid-single">
+          <div class="form-row-full"><label class="form-label">商标局批件：</label><div class="form-input"><el-input v-model="form.approvalOpinion" type="textarea" :rows="3" placeholder="请输入" :disabled="isReadonly" /><div class="opinion-upload"><el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :on-change="(f) => handleOpinionUpload(f, 'approvalOpinionAttachment')"><el-button class="btn-upload" plain size="small">{{ form.approvalOpinionAttachment ? '重新上传' : '上传附件' }}</el-button></el-upload><a v-if="form.approvalOpinionAttachment && fileUrlMap['approvalOpinionAttachment']" :href="fileUrlMap['approvalOpinionAttachment'].url" target="_blank" class="file-link">{{ fileUrlMap['approvalOpinionAttachment'].name || '查看文件' }}</a></div></div></div>
+          <div class="form-row-full"><label class="form-label">业务部门意见：</label><div class="form-input"><el-input v-model="form.businessDeptOpinion" type="textarea" :rows="3" placeholder="请输入" :disabled="isReadonly" /><div class="opinion-upload"><el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :on-change="(f) => handleOpinionUpload(f, 'businessDeptOpinionAttachment')"><el-button class="btn-upload" plain size="small">{{ form.businessDeptOpinionAttachment ? '重新上传' : '上传附件' }}</el-button></el-upload><a v-if="form.businessDeptOpinionAttachment && fileUrlMap['businessDeptOpinionAttachment']" :href="fileUrlMap['businessDeptOpinionAttachment'].url" target="_blank" class="file-link">{{ fileUrlMap['businessDeptOpinionAttachment'].name || '查看文件' }}</a></div></div></div>
+          <div class="form-row-full"><label class="form-label">商标异议申请书附件：</label><div class="form-input"><el-input v-model="form.oppositionApplicationText" type="textarea" :rows="3" placeholder="请输入" :disabled="isReadonly" /><div class="opinion-upload"><el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :on-change="(f) => handleOpinionUpload(f, 'oppositionApplicationAttachment')"><el-button class="btn-upload" plain size="small">{{ form.oppositionApplicationAttachment ? '重新上传' : '上传附件' }}</el-button></el-upload><a v-if="form.oppositionApplicationAttachment && fileUrlMap['oppositionApplicationAttachment']" :href="fileUrlMap['oppositionApplicationAttachment'].url" target="_blank" class="file-link">{{ fileUrlMap['oppositionApplicationAttachment'].name || '查看文件' }}</a></div></div></div>
+        </div>
+      </div>
+
+      <!-- 附件信息 -->
+      <div class="section">
+        <div class="section-header" @click="toggle('attachment')">
+          <span class="section-title"><span class="section-bar"></span>附件信息</span>
+          <el-icon class="collapse-icon" :class="{ collapsed: collapsed.attachment }"><DArrowRight /></el-icon>
+        </div>
+        <div v-show="!collapsed.attachment" class="attachment-content">
+          <div class="attachment-item"><label class="attachment-label">附件：</label><div class="attachment-input"><el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :on-change="(f) => handleOpinionUpload(f, 'attachment')"><el-button class="btn-upload" plain>{{ form.attachment ? '重新上传' : '上传文件' }}</el-button></el-upload><template v-for="(att, idx) in attachmentList" :key="idx"><a v-if="att.url" :href="att.url" target="_blank" class="file-link">{{ att.fileName || '查看文件' }}</a></template></div></div>
+          <div class="attachment-item"><label class="attachment-label">备注：</label><div class="attachment-input"><el-input v-model="form.remark" type="textarea" :rows="3" placeholder="请输入" :disabled="isReadonly" /></div></div>
+        </div>
+      </div>
+    </el-form>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Plus, Minus, DArrowRight } from '@element-plus/icons-vue'
+import { useRoute, useRouter } from 'vue-router'
+import { oppositionGetConfirmDetail, oppositionSaveConfirm, oppositionSubmitConfirm } from '@/api/trademark/ap/opposition'
+import { countryRegionGetList } from '@/api/trademark/bd/countryRegion'
+import { uploadFileApi, getImageUrl } from '@/api/file'
+
+const route = useRoute()
+const router = useRouter()
+const saving = ref(false)
+const isReadonly = ref(false)
+const collapsed = ref({ basic: false, brand: false, opinion: false, attachment: false })
+function toggle(key) { collapsed.value[key] = !collapsed.value[key] }
+
+const options = ref({ countryRegion: [] })
+const fileUrlMap = reactive({})
+const attachmentList = ref([])
+const citedBrandPreview = ref('')
+const changeHeaderStyle = { background: '#D6E8FB', textAlign: 'center', color: '#333333', fontWeight: '600' }
+
+const basic = ref({})
+const appInfo = ref({})
+
+const form = ref({
+  id: route.query.id || null,
+  confirmCountryRegion: '', objectionSubmitDate: '',
+  confirmOpposedPerson: '',
+  confirmObjector: '', confirmObjectionReason: '',
+  confirmCitedBrandPicUrl: null, objectionResult: '',
+  confirmClassCount: '',
+  categories: [],
+  approvalOpinion: '', approvalOpinionAttachment: null,
+  businessDeptOpinion: '', businessDeptOpinionAttachment: null,
+  oppositionApplicationText: '', oppositionApplicationAttachment: null,
+  attachment: null, remark: '',
+})
+
+const pendingFiles = ref({
+  confirmCitedBrandPicUrl: null,
+  approvalOpinionAttachment: null, businessDeptOpinionAttachment: null,
+  oppositionApplicationAttachment: null, attachment: null,
+})
+
+function addCategory(i) { form.value.categories.splice(i + 1, 0, { categoryNo: '', productService: '', acceptanceResult: '', remark: '' }) }
+function removeCategory(i) { if (form.value.categories.length > 1) form.value.categories.splice(i, 1) }
+
+function handleFilePick(file, field) {
+  pendingFiles.value[field] = file.raw
+  form.value[field] = null
+  const url = URL.createObjectURL(file.raw)
+  if (field === 'confirmOpposedBrandPicUrl') opposedBrandPreview.value = url
+  if (field === 'confirmCitedBrandPicUrl') citedBrandPreview.value = url
+}
+function handleOpinionUpload(file, field) { pendingFiles.value[field] = file.raw; form.value[field] = null }
+
+async function uploadPendingFiles() {
+  for (const field of Object.keys(pendingFiles.value)) {
+    const file = pendingFiles.value[field]
+    if (file) {
+      const formData = new FormData(); formData.append('fileList', file)
+      const res = await uploadFileApi(formData)
+      const fileId = res.data && res.data.fileId
+      if (fileId) form.value[field] = String(fileId)
+    }
+  }
+}
+
+function resolveFileUrl(field, fileId) {
+  if (fileId) getImageUrl(fileId).then(res => { if (res && res.data) fileUrlMap[field] = { url: res.data, name: res.data.split('/').pop() } }).catch(() => {})
+}
+
+function buildParam() {
+  return {
+    id: form.value.id,
+    confirmCountryRegion: form.value.confirmCountryRegion,
+    objectionSubmitDate: form.value.objectionSubmitDate,
+    confirmOpposedPerson: form.value.confirmOpposedPerson,
+    confirmObjector: form.value.confirmObjector,
+    confirmObjectionReason: form.value.confirmObjectionReason,
+    confirmCitedBrandPicUrl: form.value.confirmCitedBrandPicUrl,
+    objectionResult: form.value.objectionResult,
+    confirmClassCount: form.value.confirmClassCount ? Number(form.value.confirmClassCount) : null,
+    categories: form.value.categories,
+    approvalOpinion: form.value.approvalOpinion,
+    approvalOpinionAttachment: form.value.approvalOpinionAttachment,
+    businessDeptOpinion: form.value.businessDeptOpinion,
+    businessDeptOpinionAttachment: form.value.businessDeptOpinionAttachment,
+    oppositionApplicationAttachment: form.value.oppositionApplicationAttachment,
+    attachment: form.value.attachment,
+    remark: form.value.remark,
+  }
+}
+
+async function handleSave() {
+  try { saving.value = true; await uploadPendingFiles(); await oppositionSaveConfirm(buildParam()); ElMessage.success('保存成功') }
+  catch (e) { ElMessage.error(e.message || '保存失败') } finally { saving.value = false }
+}
+async function handleSaveAndSubmit() {
+  try { saving.value = true; await uploadPendingFiles(); await oppositionSaveConfirm(buildParam()); await oppositionSubmitConfirm(buildParam()); ElMessage.success('提交成功'); router.back() }
+  catch (e) { ElMessage.error(e.message || '提交失败') } finally { saving.value = false }
+}
+function handleCancel() { router.back() }
+
+async function loadDetail() {
+  const res = await oppositionGetConfirmDetail(route.query.id)
+  const vo = res.data
+  if (!vo) return
+  isReadonly.value = vo.basic?.status === 3
+  basic.value = vo.basic || {}
+  if (vo.opposition) {
+    const o = vo.opposition
+    appInfo.value = {
+      trademarkRegisterNo: vo.brand?.brandNo || vo.brand?.applyNo || '',
+      scopeLabel: o.scopeType === 1 ? '境内' : '境外',
+      countryRegion: o.countryRegion || '',
+      brandPicUrl: vo.brandPicUrl || '',
+      objector: o.opposedPerson || '',
+      applyPerson: vo.brand?.registerPerson || vo.brand?.applyPerson || '',
+      objectionReason: o.objectionReason || '',
+      classCount: o.categories ? o.categories.length : 0,
+    }
+    form.value.confirmCountryRegion = o.confirmCountryRegion || ''
+    form.value.objectionSubmitDate = o.objectionSubmitDate || ''
+    form.value.confirmOpposedPerson = o.confirmOpposedPerson || o.opposedPerson || ''
+    form.value.confirmObjector = o.confirmObjector || ''
+    form.value.confirmObjectionReason = o.confirmObjectionReason || o.objectionReason || ''
+    form.value.confirmCitedBrandPicUrl = o.confirmCitedBrandPicUrl
+    form.value.objectionResult = o.objectionResult || ''
+    form.value.confirmClassCount = o.confirmClassCount || (o.categories ? o.categories.length : '')
+    form.value.categories = o.categories && o.categories.length ? o.categories : [{ categoryNo: '', productService: '', acceptanceResult: '', remark: '' }]
+    form.value.approvalOpinion = o.approvalOpinion || ''
+    form.value.approvalOpinionAttachment = o.approvalOpinionAttachment
+    resolveFileUrl('approvalOpinionAttachment', o.approvalOpinionAttachment)
+    form.value.businessDeptOpinion = o.businessDeptOpinion || ''
+    form.value.businessDeptOpinionAttachment = o.businessDeptOpinionAttachment
+    resolveFileUrl('businessDeptOpinionAttachment', o.businessDeptOpinionAttachment)
+    form.value.oppositionApplicationAttachment = o.oppositionApplicationAttachment
+    resolveFileUrl('oppositionApplicationAttachment', o.oppositionApplicationAttachment)
+    form.value.attachment = o.attachment
+    if (o.attachmentList) attachmentList.value = o.attachmentList
+    form.value.remark = o.remark || ''
+  }
+}
+
+onMounted(async () => {
+  const crRes = await countryRegionGetList({ page: 1, pageSize: 1000 })
+  options.value.countryRegion = (crRes.data && crRes.data.list) || crRes.data || []
+  await loadDetail()
+})
+</script>
+
+<style lang="scss" scoped>
+.form-page {
+  background: #FFFFFF;
+  padding: 24px 32px 40px;
+  margin: 0 80px;
+
+  .page-top { display: flex; justify-content: space-between; margin-bottom: 20px; }
+  .page-title { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 24px; font-weight: 700; color: #333333; margin: 0 0 20px 0; }
+  .topBtn { display: flex; margin-bottom: 24px;
+    .btn-cancel { background: #FFFFFF; border: 1px solid #D9D9D9; border-radius: 6px; color: #333333; font-size: 14px; }
+    .btn-submit { background: #1890FF; border: none; border-radius: 6px; color: #FFFFFF; font-size: 14px; }
+  }
+  .section { margin-bottom: 32px;
+    .section-header { display: flex; align-items: center; justify-content: space-between; background: #f2f8ff; padding: 10px 16px; margin-bottom: 20px; color: #333333; margin-right: 20px; cursor: pointer;
+      .section-title { display: flex; align-items: center; font-size: 16px; font-weight: 600; color: #333333;
+        .section-bar { display: inline-block; width: 4px; height: 18px; background: #1890FF; margin-right: 8px; border-radius: 2px; }
+      }
+      .collapse-icon { color: #1890FF; transform: rotate(90deg); transition: transform 0.2s; &.collapsed { transform: rotate(0deg); } }
+    }
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 100px; padding: 0 260px 0 120px; }
+  .form-grid-single { display: flex; flex-direction: column; gap: 20px; padding: 0 260px 0 120px; }
+  .form-row { display: flex; align-items: flex-start;
+    .form-label { flex: 0 0 150px; text-align: right; padding-right: 12px; color: #333333; font-family: 'Microsoft YaHei', sans-serif; font-size: 14px; line-height: 36px; white-space: nowrap; font-weight: 500 !important;
+      .req { color: #FF4D4F; margin-right: 2px; font-weight: 700; }
+    }
+    .form-input { flex: 1; min-width: 0; }
+  }
+  .form-basic-row-full { display: flex; align-items: flex-start; padding: 20px 380px 0 120px;
+    .form-label { flex: 0 0 150px; text-align: right; padding-right: 12px; color: #333333; font-family: 'Microsoft YaHei', sans-serif; font-size: 14px; line-height: 36px; white-space: nowrap; font-weight: 500 !important; }
+    .form-input { flex: 1; min-width: 0; }
+  }
+  .form-row-full { display: flex; align-items: flex-start; padding: 0px 120px 0 0;
+    .form-label { flex: 0 0 150px; text-align: right; padding-right: 12px; color: #333333; font-family: 'Microsoft YaHei', sans-serif; font-size: 14px; line-height: 36px; white-space: nowrap; font-weight: 500 !important; }
+    .form-input { flex: 1; min-width: 0; }
+  }
+  .categoryTable { margin-top: 25px; padding: 0 60px 0 60px;
+    :deep(.el-table) { border: none; }
+    :deep(.el-table__header) { th { background: #FAFAFA; color: #333333; font-weight: 600; border: none; border-bottom: 1px solid #EBEEF5; } }
+    :deep(.el-table__body) { td { height: 50px; border: none; border-bottom: 1px solid #EBEEF5; } }
+    :deep(.el-table::before) { display: none; }
+  }
+  .btn-upload { border-radius: 6px; font-size: 14px; padding: 15px 15px; font-weight: 500 !important; }
+  .opinion-upload { display: flex; align-items: center; gap: 8px; margin-top: 8px; .upload-status { font-size: 12px; color: #67C23A; } }
+  .upload-status { font-size: 12px; color: #67C23A; margin-left: 8px; }
+  .file-link { color: #409eff; text-decoration: none; margin-left: 8px; font-size: 13px; }
+  .file-link:hover { text-decoration: underline; }
+  .attachment-content { padding: 0 20px;
+    .attachment-item { display: flex; align-items: flex-start; margin-bottom: 20px; padding: 0 300px 0 100px;
+      .attachment-label { flex: 0 0 150px; text-align: right; padding-right: 12px; color: #333333; font-family: 'Microsoft YaHei', sans-serif; font-size: 14px; line-height: 36px; white-space: nowrap; }
+      .attachment-input { flex: 1; min-width: 0; }
+    }
+  }
+  .btn-circle { border-radius: 100%; padding: 5px; }
+  .category-actions { display: flex; align-items: center; justify-content: center; gap: 8px; }
+  :deep(.input-disabled .el-input__inner) { background-color: #F5F5F5; color: #999999; border-color: #D9D9D9; }
+}
+.info-table { padding: 0 24px 16px; }
+.basic-info-table, .confirm-info-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.basic-info-table td, .confirm-info-table td, .confirm-info-table th { border: 1px solid #E8E8E8; padding: 10px 12px; }
+.label-cell { background: #F5F7FA; color: #666; width: 140px; text-align: center; }
+.value-cell { color: #333; }
+.link { color: #1890FF; cursor: pointer; }
+.req-label { color: #333; }
+.req-label::before { content: '* '; color: #FF4D4F; }
+.brand-thumb { width: 40px; height: 40px; object-fit: contain; vertical-align: middle; margin-right: 4px; }
+</style>

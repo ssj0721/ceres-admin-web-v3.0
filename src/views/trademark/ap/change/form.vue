@@ -174,7 +174,8 @@
                 <el-upload v-if="canSave" :auto-upload="false" :limit="1" :on-change="(file) => handleOpinionUpload(file, 'managementOpinionAttachment')" :on-remove="() => handleOpinionRemove('managementOpinionAttachment')">
                   <el-button class="btn-upload" plain size="small">{{ form.managementOpinionAttachment ? '重新上传' : '上传附件' }}</el-button>
                 </el-upload>
-                <span v-if="form.managementOpinionAttachment" class="upload-status">已上传</span>
+                <a v-if="form.managementOpinionAttachment && fileUrlMap['managementOpinionAttachment']" :href="fileUrlMap['managementOpinionAttachment'].url" target="_blank" class="file-link" @click.stop>{{ fileUrlMap['managementOpinionAttachment'].name || '查看文件' }}</a>
+                <span v-else-if="form.managementOpinionAttachment" class="upload-status">已上传</span>
               </div>
             </div>
           </div>
@@ -194,7 +195,10 @@
               <el-upload v-if="canSave" :auto-upload="false" :limit="1" :on-change="(file) => handleOpinionUpload(file, 'attachment')" :on-remove="() => handleOpinionRemove('attachment')">
                 <el-button class="btn-upload" plain>{{ form.attachment ? '重新上传' : '上传文件' }}</el-button>
               </el-upload>
-              <span v-if="form.attachment" class="upload-status">已上传</span>
+              <template v-for="(att, idx) in attachmentList" :key="idx">
+                <a v-if="att.url" :href="att.url" target="_blank" class="file-link" @click.stop>{{ att.fileName || '查看文件' }}</a>
+                </template>
+              <span v-if="form.attachment && !attachmentList.length" class="upload-status">已上传</span>
             </div>
           </div>
           <div class="attachment-item">
@@ -213,8 +217,8 @@
 import { brandChangeAdd, brandChangeUpdate, brandChangeSubmit, brandChangeGetDetail, brandChangeGetBrandInfo } from '@/api/trademark/ap/brandChange'
 import { scopeOptions, brandStatusOptions } from '../config'
 import { agentGetList } from '@/api/trademark/bd/agent'
-import { uploadFileApi } from '@/api/file'
-import { onMounted, ref, computed } from 'vue'
+import { uploadFileApi, getImageUrl } from '@/api/file'
+import { onMounted, ref, computed, reactive} from 'vue'
 import { DArrowRight } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getUserName } from '@/utils/auth'
@@ -240,6 +244,8 @@ const beforeAgensecName = ref('')
 const categories = ref([])
 // 待上传文件（保存时统一上传）
 const pendingFiles = ref({ managementOpinionAttachment: null, attachment: null })
+const fileUrlMap = reactive({})
+const attachmentList = ref([])
 
 const changeHeaderStyle = { background: '#fafafa', textAlign: 'center', color: '#333333', fontWeight: '600' }
 
@@ -412,7 +418,14 @@ async function loadEditData(basicId) {
       form.value.afterProducsecScope = vo.change.afterProducsecScope || ''
       form.value.managementOpinion = vo.change.managementOpinion || ''
       form.value.managementOpinionAttachment = vo.change.managementOpinionAttachment
+      resolveFileUrl('managementOpinionAttachment', vo.change.managementOpinionAttachment)
       form.value.attachment = vo.change.attachment
+      if (vo.change.attachmentList && vo.change.attachmentList.length) {
+      attachmentList.value = vo.change.attachmentList
+    } else if (vo.change.attachment) {
+      const n = String(vo.change.attachment).includes('/') ? String(vo.change.attachment).split('/').pop() : ''
+      getImageUrl(vo.change.attachment).then(r => { if (r && r.data) attachmentList.value = [{ fileName: n || '查看文件', url: r.data, fileId: vo.change.attachment }] }).catch(() => {})
+    }
       form.value.remark = vo.change.remark || ''
     }
   } catch (e) {
@@ -440,14 +453,31 @@ function handleAgentChange(agentId) {
   }
 }
 
+
+function resolveFileUrl(field, fileId) {
+  if (!fileId) return
+  const name = fileId.includes('/') ? fileId.split('/').pop() : ''
+  fileUrlMap[field] = { url: fileId, name }
+  if (!/^https?:\/\//.test(fileId)) {
+    getImageUrl(fileId).then(res => {
+      if (res && res.data) {
+        const n = res.data.includes('/') ? res.data.split('/').pop() : name
+        fileUrlMap[field] = { url: res.data, name: n }
+      }
+    }).catch(() => {})
+  }
+}
 // 附件选择（暂存，保存时统一上传）
 function handleOpinionUpload(file, field) {
   pendingFiles.value[field] = file.raw
   form.value[field] = null
+  if (field === 'attachment') { attachmentList.value = [] }
 }
 function handleOpinionRemove(field) {
   pendingFiles.value[field] = null
   form.value[field] = null
+  delete fileUrlMap[field]
+  if (field === 'attachment') { attachmentList.value = [] }
 }
 
 async function uploadPendingFiles() {
@@ -792,7 +822,9 @@ function handleCancel() { router.back() }
     margin-left: 8px;
   }
 
-  .attachment-content {
+  .file-link { color: #409eff; text-decoration: none; margin-left: 8px; font-size: 13px; }
+.file-link:hover { text-decoration: underline; }
+.attachment-content {
     padding: 0 20px;
 
     .attachment-item {

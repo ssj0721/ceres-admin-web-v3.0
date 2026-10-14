@@ -115,7 +115,8 @@
               <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleFilePick(f, 'approvalOpinionAttachment')">
                 <el-button class="btn-upload" plain>上传附件</el-button>
               </el-upload>
-              <span v-if="form.approvalOpinionAttachment && !pendingFiles.approvalOpinionAttachment" class="uploaded-tip">已上传附件</span>
+              <a v-if="form.approvalOpinionAttachment && !pendingFiles.approvalOpinionAttachment && fileUrlMap['approvalOpinionAttachment']" :href="fileUrlMap['approvalOpinionAttachment'].url" target="_blank" class="file-link" @click.stop>{{ fileUrlMap['approvalOpinionAttachment'].name || '查看文件' }}</a>
+<span v-else-if="form.approvalOpinionAttachment && !pendingFiles.approvalOpinionAttachment" class="uploaded-tip">已上传附件</span>
             </div>
           </div>
         </div>
@@ -136,7 +137,10 @@
               <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleFilePick(f, 'attachment')">
                 <el-button class="btn-upload" plain>上传文件</el-button>
               </el-upload>
-              <span v-if="form.attachment && !pendingFiles.attachment" class="uploaded-tip">已上传附件</span>
+              <template v-for="(att, idx) in attachmentList" :key="idx">
+                <a v-if="att.url" :href="att.url" target="_blank" class="file-link" @click.stop>{{ att.fileName || '查看文件' }}</a>
+                </template>
+              <span v-if="form.attachment && !pendingFiles.attachment && !attachmentList.length" class="uploaded-tip">已上传附件</span>
             </div>
           </div>
         </div>
@@ -153,8 +157,8 @@
 import { brandChangeSaveConfirm, brandChangeSubmitConfirm, brandChangeGetConfirmDetail } from '@/api/trademark/ap/brandChange'
 import { typeMap, scopeMap, brandStatusOptions } from '../config'
 import { agentGetList } from '@/api/trademark/bd/agent'
-import { uploadFileApi } from '@/api/file'
-import { onMounted, ref, computed } from 'vue'
+import { uploadFileApi, getImageUrl } from '@/api/file'
+import { onMounted, ref, computed, reactive} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Plus, Minus, DArrowRight } from '@element-plus/icons-vue'
@@ -176,6 +180,8 @@ const beforeAgensecName = ref('')
 
 // 待上传文件（保存时统一上传）
 const pendingFiles = ref({ approvalOpinionAttachment: null, attachment: null })
+const fileUrlMap = reactive({})
+const attachmentList = ref([])
 const options = ref({ agent: [] })
 
 const changeHeaderStyle = { background: '#D6E8FB', textAlign: 'center', color: '#333333', fontWeight: '600' }
@@ -264,7 +270,14 @@ async function loadDetail() {
       form.value.afterAgensecId = d.change.afterAgensecId ?? null
       form.value.approvalOpinion = d.change.approvalOpinion || ''
       form.value.approvalOpinionAttachment = d.change.approvalOpinionAttachment
+      resolveFileUrl('approvalOpinionAttachment', d.change.approvalOpinionAttachment)
       form.value.attachment = d.change.attachment
+      if (d.change.attachmentList && d.change.attachmentList.length) {
+      attachmentList.value = d.change.attachmentList
+    } else if (d.change.attachment) {
+      const n = String(d.change.attachment).includes('/') ? String(d.change.attachment).split('/').pop() : ''
+      getImageUrl(d.change.attachment).then(r => { if (r && r.data) attachmentList.value = [{ fileName: n || '查看文件', url: r.data, fileId: d.change.attachment }] }).catch(() => {})
+    }
       form.value.remark = d.change.remark || ''
       // 变更后类别：优先解析变更后快照文本，空则回退台账当前类别
       const rows = parseScopeText(d.change.afterProducsecScope)
@@ -323,9 +336,24 @@ function validateConfirm() {
 }
 
 // 附件选择（暂存，保存时统一上传）
+
+function resolveFileUrl(field, fileId) {
+  if (!fileId) return
+  const name = fileId.includes('/') ? fileId.split('/').pop() : ''
+  fileUrlMap[field] = { url: fileId, name }
+  if (!/^https?:\/\//.test(fileId)) {
+    getImageUrl(fileId).then(res => {
+      if (res && res.data) {
+        const n = res.data.includes('/') ? res.data.split('/').pop() : name
+        fileUrlMap[field] = { url: res.data, name: n }
+      }
+    }).catch(() => {})
+  }
+}
 function handleFilePick(file, field) {
   pendingFiles.value[field] = file.raw
   form.value[field] = null
+  if (field === 'attachment') { attachmentList.value = [] }
 }
 
 async function uploadPendingFiles() {
@@ -546,7 +574,9 @@ function handleCancel() { router.back() }
     gap: 10px;
     margin-top: 8px;
   }
-  .uploaded-tip {
+  .file-link { color: #409eff; text-decoration: none; margin-left: 8px; font-size: 13px; }
+.file-link:hover { text-decoration: underline; }
+.uploaded-tip {
     font-size: 12px;
     color: #67C23A;
   }

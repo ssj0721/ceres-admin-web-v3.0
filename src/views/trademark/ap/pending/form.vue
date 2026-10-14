@@ -200,7 +200,8 @@
                 <el-upload :auto-upload="false" :limit="1" :on-change="(file) => handleOpinionUpload(file, 'agensecOpinionUrl')" :on-remove="() => handleOpinionRemove('agensecOpinionUrl')">
                   <el-button class="btn-upload" plain size="small">{{ form.agensecOpinionUrl ? '重新上传' : '上传附件' }}</el-button>
                 </el-upload>
-                <span v-if="form.agensecOpinionUrl" class="upload-status">已上传</span>
+                <a v-if="form.agensecOpinionUrl && fileUrlMap['agensecOpinionUrl']" :href="fileUrlMap['agensecOpinionUrl'].url" target="_blank" class="file-link" @click.stop>{{ fileUrlMap['agensecOpinionUrl'].name || '查看文件' }}</a>
+                <span v-else-if="form.agensecOpinionUrl" class="upload-status">已上传</span>
               </div>
             </div>
           </div>
@@ -212,7 +213,8 @@
                 <el-upload :auto-upload="false" :limit="1" :on-change="(file) => handleOpinionUpload(file, 'secretaryOpinionAttachment')" :on-remove="() => handleOpinionRemove('secretaryOpinionAttachment')">
                   <el-button class="btn-upload" plain size="small">{{ form.secretaryOpinionAttachment ? '重新上传' : '上传附件' }}</el-button>
                 </el-upload>
-                <span v-if="form.secretaryOpinionAttachment" class="upload-status">已上传</span>
+                <a v-if="form.secretaryOpinionAttachment && fileUrlMap['secretaryOpinionAttachment']" :href="fileUrlMap['secretaryOpinionAttachment'].url" target="_blank" class="file-link" @click.stop>{{ fileUrlMap['secretaryOpinionAttachment'].name || '查看文件' }}</a>
+                <span v-else-if="form.secretaryOpinionAttachment" class="upload-status">已上传</span>
               </div>
             </div>
           </div>
@@ -224,7 +226,8 @@
                 <el-upload :auto-upload="false" :limit="1" :on-change="(file) => handleOpinionUpload(file, 'legalOpinionAttachment')" :on-remove="() => handleOpinionRemove('legalOpinionAttachment')">
                   <el-button class="btn-upload" plain size="small">{{ form.legalOpinionAttachment ? '重新上传' : '上传附件' }}</el-button>
                 </el-upload>
-                <span v-if="form.legalOpinionAttachment" class="upload-status">已上传</span>
+                <a v-if="form.legalOpinionAttachment && fileUrlMap['legalOpinionAttachment']" :href="fileUrlMap['legalOpinionAttachment'].url" target="_blank" class="file-link" @click.stop>{{ fileUrlMap['legalOpinionAttachment'].name || '查看文件' }}</a>
+                <span v-else-if="form.legalOpinionAttachment" class="upload-status">已上传</span>
               </div>
             </div>
           </div>
@@ -236,7 +239,8 @@
                 <el-upload :auto-upload="false" :limit="1" :on-change="(file) => handleOpinionUpload(file, 'businessOpinionAttachment')" :on-remove="() => handleOpinionRemove('businessOpinionAttachment')">
                   <el-button class="btn-upload" plain size="small">{{ form.businessOpinionAttachment ? '重新上传' : '上传附件' }}</el-button>
                 </el-upload>
-                <span v-if="form.businessOpinionAttachment" class="upload-status">已上传</span>
+                <a v-if="form.businessOpinionAttachment && fileUrlMap['businessOpinionAttachment']" :href="fileUrlMap['businessOpinionAttachment'].url" target="_blank" class="file-link" @click.stop>{{ fileUrlMap['businessOpinionAttachment'].name || '查看文件' }}</a>
+                <span v-else-if="form.businessOpinionAttachment" class="upload-status">已上传</span>
               </div>
             </div>
           </div>
@@ -256,7 +260,10 @@
               <el-upload :auto-upload="false" :limit="1" :on-change="(file) => handleOpinionUpload(file, 'attachment')" :on-remove="() => handleOpinionRemove('attachment')">
                 <el-button class="btn-upload" plain>{{ form.attachment ? '重新上传' : '上传文件' }}</el-button>
               </el-upload>
-              <span v-if="form.attachment" class="upload-status">已上传</span>
+              <template v-for="(att, idx) in attachmentList" :key="idx">
+                <a v-if="att.url" :href="att.url" target="_blank" class="file-link" @click.stop>{{ att.fileName || '查看文件' }}</a>
+                </template>
+              <span v-if="form.attachment && !attachmentList.length" class="upload-status">已上传</span>
             </div>
           </div>
           <div class="attachment-item">
@@ -278,7 +285,7 @@ import { agentGetList } from '@/api/trademark/bd/agent'
 import { countryRegionGetList } from '@/api/trademark/bd/countryRegion'
 import { brandSeriesGetList } from '@/api/trademark/bd/brandSeries'
 import { uploadFileApi, deletefile, getImageUrl } from '@/api/file'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, reactive} from 'vue'
 import { Plus, Minus, DArrowRight } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getUserName } from '@/utils/auth'
@@ -297,6 +304,8 @@ const collapsed = ref({ basic: false, brand: false, agent: false, opinion: false
 function toggle(key) { collapsed.value[key] = !collapsed.value[key] }
 // 待上传文件（保存时统一上传）
 const brandImageUrl = ref('')
+const fileUrlMap = reactive({})
+const attachmentList = ref([])
 const pendingFiles = ref({
   brandUrl: null,
   agensecOpinionUrl: null,
@@ -412,13 +421,23 @@ async function loadEditData() {
     // 填充意见信息
     form.value.agensecOpinion = data.agensecOpinion || ''
     form.value.agensecOpinionUrl = data.agensecOpinionUrl
+    resolveFileUrl('agensecOpinionUrl', data.agensecOpinionUrl)
     form.value.secretaryOpinion = data.secretaryOpinion || ''
     form.value.secretaryOpinionAttachment = data.secretaryOpinionAttachment
+    resolveFileUrl('secretaryOpinionAttachment', data.secretaryOpinionAttachment)
     form.value.legalOpinion = data.legalOpinion || ''
     form.value.legalOpinionAttachment = data.legalOpinionAttachment
+    resolveFileUrl('legalOpinionAttachment', data.legalOpinionAttachment)
     form.value.businessOpinion = data.businessOpinion || ''
     form.value.businessOpinionAttachment = data.businessOpinionAttachment
+    resolveFileUrl('businessOpinionAttachment', data.businessOpinionAttachment)
     form.value.attachment = data.attachment
+    if (data.attachmentList && data.attachmentList.length) {
+      attachmentList.value = data.attachmentList
+    } else if (data.attachment) {
+      const n = String(data.attachment).includes('/') ? String(data.attachment).split('/').pop() : ''
+      getImageUrl(data.attachment).then(r => { if (r && r.data) attachmentList.value = [{ fileName: n || '查看文件', url: r.data, fileId: data.attachment }] }).catch(() => {})
+    }
     form.value.remark = data.remark || ''
     // 填充类别
     if (data.categories && data.categories.length > 0) {
@@ -455,18 +474,35 @@ function handleBrandChange(file) {
 }
 // 附件与意见附件均为单文件，复用 handleOpinionUpload / handleOpinionRemove
 
+
+function resolveFileUrl(field, fileId) {
+  if (!fileId) return
+  const name = fileId.includes('/') ? fileId.split('/').pop() : ''
+  fileUrlMap[field] = { url: fileId, name }
+  if (!/^https?:\/\//.test(fileId)) {
+    getImageUrl(fileId).then(res => {
+      if (res && res.data) {
+        const n = res.data.includes('/') ? res.data.split('/').pop() : name
+        fileUrlMap[field] = { url: res.data, name: n }
+      }
+    }).catch(() => {})
+  }
+}
 // 意见附件选择（暂存，保存时统一上传）
 function handleOpinionUpload(file, field) {
   // 暂存文件对象，覆盖之前的待上传文件
   pendingFiles.value[field] = file.raw
   // 清除已上传的文件ID（因为将被新文件覆盖）
   form.value[field] = null
+  if (field === 'attachment') { attachmentList.value = [] }
 }
 
 // 意见附件移除（清除待上传文件）
 function handleOpinionRemove(field) {
   pendingFiles.value[field] = null
   form.value[field] = null
+  delete fileUrlMap[field]
+  if (field === 'attachment') { attachmentList.value = [] }
 }
 
 // 统一上传待上传文件
@@ -820,7 +856,9 @@ function handleCancel(){router.back()}
     }
   }
 
-  .attachment-content {
+  .file-link { color: #409eff; text-decoration: none; margin-left: 8px; font-size: 13px; }
+.file-link:hover { text-decoration: underline; }
+.attachment-content {
     padding: 0 20px;
 
     .attachment-item {

@@ -169,7 +169,8 @@
               <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleFilePick(f, 'agensecOpinionUrl')">
                 <el-button class="btn-upload" plain>上传附件</el-button>
               </el-upload>
-              <span v-if="form.agensecOpinionUrl && !pendingFiles.agensecOpinionUrl" class="uploaded-tip">已上传附件</span>
+              <a v-if="form.agensecOpinionUrl && !pendingFiles.agensecOpinionUrl && fileUrlMap['agensecOpinionUrl']" :href="fileUrlMap['agensecOpinionUrl'].url" target="_blank" class="file-link" @click.stop>{{ fileUrlMap['agensecOpinionUrl'].name || '查看文件' }}</a>
+<span v-else-if="form.agensecOpinionUrl && !pendingFiles.agensecOpinionUrl" class="uploaded-tip">已上传附件</span>
             </div>
           </div>
         </div>
@@ -190,7 +191,10 @@
               <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleFilePick(f, 'attachment')">
                 <el-button class="btn-upload" plain>上传文件</el-button>
               </el-upload>
-              <span v-if="form.attachment && !pendingFiles.attachment" class="uploaded-tip">已上传附件</span>
+              <template v-for="(att, idx) in attachmentList" :key="idx">
+                <a v-if="att.url" :href="att.url" target="_blank" class="file-link" @click.stop>{{ att.fileName || '查看文件' }}</a>
+                </template>
+              <span v-if="form.attachment && !pendingFiles.attachment && !attachmentList.length" class="uploaded-tip">已上传附件</span>
             </div>
           </div>
         </div>
@@ -209,7 +213,7 @@ import { typeMap, scopeMap, registerTypeOptions } from '../config'
 import { countryRegionGetList } from '@/api/trademark/bd/countryRegion'
 import { brandSeriesGetList } from '@/api/trademark/bd/brandSeries'
 import { uploadFileApi, getImageUrl } from '@/api/file'
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, reactive} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Plus, Minus, DArrowRight } from '@element-plus/icons-vue'
@@ -230,6 +234,8 @@ const confirmBrandImg = ref('')
 
 const regPeriodRange = ref([])
 const pendingFiles = ref({ brandPicUrl: null, agensecOpinionUrl: null, attachment: null })
+const fileUrlMap = reactive({})
+const attachmentList = ref([])
 const options = ref({ countryRegion: [], brandSeries: [] })
 
 const form = ref({
@@ -314,7 +320,14 @@ async function loadDetail() {
     form.value.seriesId = d.seriesId
     form.value.agensecOpinion = d.agensecOpinion || ''
     form.value.agensecOpinionUrl = d.agensecOpinionUrl
+      resolveFileUrl('agensecOpinionUrl', d.agensecOpinionUrl)
     form.value.attachment = d.attachment
+    if (d.attachmentList && d.attachmentList.length) {
+      attachmentList.value = d.attachmentList
+    } else if (d.attachment) {
+      const n = String(d.attachment).includes('/') ? String(d.attachment).split('/').pop() : ''
+      getImageUrl(d.attachment).then(r => { if (r && r.data) attachmentList.value = [{ fileName: n || '查看文件', url: r.data, fileId: d.attachment }] }).catch(() => {})
+    }
     form.value.remark = d.remark || ''
     if (d.categories && d.categories.length > 0) {
       form.value.categories = d.categories.map(c => ({
@@ -356,9 +369,24 @@ function handleBrandChange(file) {
   if (file.raw) confirmBrandImg.value = URL.createObjectURL(file.raw)
 }
 
+
+function resolveFileUrl(field, fileId) {
+  if (!fileId) return
+  const name = fileId.includes('/') ? fileId.split('/').pop() : ''
+  fileUrlMap[field] = { url: fileId, name }
+  if (!/^https?:\/\//.test(fileId)) {
+    getImageUrl(fileId).then(res => {
+      if (res && res.data) {
+        const n = res.data.includes('/') ? res.data.split('/').pop() : name
+        fileUrlMap[field] = { url: res.data, name: n }
+      }
+    }).catch(() => {})
+  }
+}
 function handleFilePick(file, field) {
   pendingFiles.value[field] = file.raw
   form.value[field] = null
+  if (field === 'attachment') { attachmentList.value = [] }
 }
 
 async function uploadPendingFiles() {
@@ -581,7 +609,9 @@ function handleCancel() { router.back() }
     gap: 10px;
     margin-top: 8px;
   }
-  .uploaded-tip {
+  .file-link { color: #409eff; text-decoration: none; margin-left: 8px; font-size: 13px; }
+.file-link:hover { text-decoration: underline; }
+.uploaded-tip {
     font-size: 12px;
     color: #67C23A;
   }

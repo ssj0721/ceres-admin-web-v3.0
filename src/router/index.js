@@ -122,6 +122,46 @@ export const mainRoutes = [
         path:'/trademark/ap/change/confirm',
         name:'ChangeConfirm',
         component:()=>import("@/views/trademark/ap/change/confirm.vue")
+      },
+      {
+        path:'/trademark/ap/renewal/form',
+        name:'Renewal',
+        component:()=>import("@/views/trademark/ap/renewal/form.vue")
+      },
+      {
+        path:'/trademark/ap/renewal/confirm',
+        name:'RenewalConfirm',
+        component:()=>import("@/views/trademark/ap/renewal/confirm.vue")
+      },
+      {
+        path:'/trademark/ap/transfer/form',
+        name:'Transfer',
+        component:()=>import('@/views/trademark/ap/transfer/form.vue')
+      },
+      {
+        path:'/trademark/ap/transfer/confirm',
+        name:'TransferConfirm',
+        component:()=>import('@/views/trademark/ap/transfer/confirm.vue')
+      },
+      {
+        path:'/trademark/ap/opposition/form',
+        name:'Opposition',
+        component:()=>import('@/views/trademark/ap/opposition/form.vue')
+      },
+      {
+        path:'/trademark/ap/opposition/confirm',
+        name:'OppositionConfirm',
+        component:()=>import('@/views/trademark/ap/opposition/confirm.vue')
+      },
+      {
+        path:'/trademark/ap/rejection/form',
+        name:'RejectionReview',
+        component:()=>import('@/views/trademark/ap/rejection/form.vue')
+      },
+      {
+        path:'/trademark/ap/rejection/confirm',
+        name:'RejectionReviewConfirm',
+        component:()=>import('@/views/trademark/ap/rejection/confirm.vue')
       }
       // {
       //   path: 'dashboard',

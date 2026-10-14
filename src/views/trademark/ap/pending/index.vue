@@ -122,6 +122,10 @@ import CreateDialog from './createDialog.vue'
 import { basicGetList, basicDelete, basicDeleteBatch } from '@/api/trademark/ap/basic'
 import { registerSubmit, registerUnapprove } from '@/api/trademark/ap/register'
 import { brandChangeSubmit, brandChangeUnapprove } from '@/api/trademark/ap/brandChange'
+import { renewalSubmit, renewalUnapprove } from '@/api/trademark/ap/renewal'
+import { transferSubmit, transferUnapprove } from '@/api/trademark/ap/transfer'
+import { rejectionReviewSubmit, rejectionReviewUnapprove } from '@/api/trademark/ap/rejectionReview'
+import { oppositionSubmit, oppositionUnapprove } from '@/api/trademark/ap/opposition'
 import { tabList, detailTypeMap, typeOptions, scopeMap, scopeOptions } from '../config'
 import { countryRegionGetList } from '@/api/trademark/bd/countryRegion'
 import { onMounted, ref } from 'vue'
@@ -191,7 +195,7 @@ function handleSelectionChange(rows) { selectedRows.value = rows }
 
 function handleSubmit(row) {
   ElMessageBox.confirm('确认提交该申请？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }).then(() => {
-    const submitApi = row.type === 1 ? brandChangeSubmit : registerSubmit
+    const submitApi = row.type === 2 ? brandChangeSubmit : (row.type === 4 ? transferSubmit : (row.type === 5 ? renewalSubmit : (row.type === 6 ? oppositionSubmit : row.type === 10 ? rejectionReviewSubmit : registerSubmit)))
     submitApi(row.id).then(() => { ElMessage.success('提交成功'); handleGetTable() })
   }).catch(() => {})
 }
@@ -226,22 +230,42 @@ function handleBatchDelete() {
 function handleBatchSubmit() {
   if (selectedRows.value.length === 0) return ElMessage.warning('请先选择要提交的记录')
   ElMessageBox.confirm('确认提交选中的 ' + selectedRows.value.length + ' 条记录？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }).then(() => {
-    const promises = selectedRows.value.map(row => (row.type === 1 ? brandChangeSubmit : registerSubmit)(row.id))
+    const promises = selectedRows.value.map(row => (row.type === 2 ? brandChangeSubmit : (row.type === 4 ? transferSubmit : (row.type === 5 ? renewalSubmit : (row.type === 6 ? oppositionSubmit : row.type === 10 ? rejectionReviewSubmit : registerSubmit))))(row.id))
     Promise.all(promises).then(() => { ElMessage.success('批量提交成功'); handleGetTable() })
   }).catch(() => {})
 }
 
 function handleWithdraw(row) {
   ElMessageBox.confirm('确认撤回该申请？撤回后将退回待提交状态', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }).then(() => {
-    const unapproveApi = row.type === 1 ? brandChangeUnapprove : registerUnapprove
+    const unapproveApi = row.type === 2 ? brandChangeUnapprove : (row.type === 4 ? transferUnapprove : (row.type === 5 ? renewalUnapprove : (row.type === 6 ? oppositionUnapprove : row.type === 10 ? rejectionReviewUnapprove : registerUnapprove)))
     unapproveApi(row.id).then(() => { ElMessage.success('撤回成功'); handleGetTable() })
   }).catch(() => {})
 }
 
 function handleConfirm(row) {
   // 变更类：跳转变更确认页（id 为申请基本信息ID）
-  if (row.type === 1) {
+  if (row.type === 2) {
     router.push({ name: 'ChangeConfirm', query: { id: row.id } })
+    return
+  }
+  // 续展类：跳转续展确认页（id 为申请基本信息ID）
+  if (row.type === 5) {
+    router.push({ name: 'RenewalConfirm', query: { id: row.id } })
+    return
+  }
+  // 转让类：跳转转让确认页（id 为申请基本信息ID）
+  if (row.type === 4) {
+    router.push({ name: 'TransferConfirm', query: { id: row.id } })
+    return
+  }
+  // 异议申请类：跳转异议确认页
+  if (row.type === 6) {
+    router.push({ name: 'OppositionConfirm', query: { id: row.id } })
+    return
+  }
+  // 驳回复审类：跳转驳回复审确认页
+  if (row.type === 10) {
+    router.push({ name: 'RejectionReviewConfirm', query: { id: row.id } })
     return
   }
   router.push({ name: 'RegisterConfirm', query: { id: row.id } })
@@ -249,11 +273,47 @@ function handleConfirm(row) {
 
 function handleEdit(row) {
   // 变更类：待确认/已确认跳变更确认页（查看/确认数据），待提交/签批中跳变更编制页（提交后只读）
-  if (row.type === 1) {
+  if (row.type === 2) {
     if (activeTab.value === 2 || activeTab.value === 3) {
       router.push({ name: 'ChangeConfirm', query: { id: row.id } })
     } else {
       router.push({ name: 'Change', query: { id: row.id } })
+    }
+    return
+  }
+  // 续展类：待确认/已确认跳续展确认页，待提交/签批中跳续展编制页
+  if (row.type === 5) {
+    if (activeTab.value === 2 || activeTab.value === 3) {
+      router.push({ name: 'RenewalConfirm', query: { id: row.id } })
+    } else {
+      router.push({ name: 'Renewal', query: { id: row.id } })
+    }
+    return
+  }
+  // 转让类：待确认/已确认跳转让确认页，待提交/签批中跳转让编制页
+  if (row.type === 4) {
+    if (activeTab.value === 2 || activeTab.value === 3) {
+      router.push({ name: 'TransferConfirm', query: { id: row.id } })
+    } else {
+      router.push({ name: 'Transfer', query: { id: row.id } })
+    }
+    return
+  }
+  // 异议申请类：待确认/已确认跳异议确认页，待提交/签批中跳异议编制页
+  if (row.type === 6) {
+    if (activeTab.value === 2 || activeTab.value === 3) {
+      router.push({ name: 'OppositionConfirm', query: { id: row.id } })
+    } else {
+      router.push({ name: 'Opposition', query: { id: row.id } })
+    }
+    return
+  }
+  // 驳回复审类：待确认/已确认跳驳回复审确认页，待提交/签批中跳驳回复审编制页
+  if (row.type === 10) {
+    if (activeTab.value === 2 || activeTab.value === 3) {
+      router.push({ name: 'RejectionReviewConfirm', query: { id: row.id } })
+    } else {
+      router.push({ name: 'RejectionReview', query: { id: row.id } })
     }
     return
   }
@@ -268,13 +328,13 @@ function handleExport() { ElMessage.info('导出功能待实现') }
 function handleExportRow(row) { ElMessage.info('导出功能待实现') }
 
 const routerList = {
-  0: 'Register',
+  1: 'Register',
 }
 
 function handleCreateConfirm(type) {
   showCreateDialog.value = false
   // 变更：需先选中一条记录，携带商标ID跳转变更编制页
-  if (type === 1) {
+  if (type === 2) {
     if (selectedRows.value.length !== 1) {
       ElMessage.warning('请先选中一条记录')
       return
@@ -285,6 +345,62 @@ function handleCreateConfirm(type) {
       return
     }
     router.push({ name: 'Change', query: { brandId: row.brandId } })
+    return
+  }
+  // 续展：同样需先选中一条记录，携带商标ID跳转续展编制页
+  if (type === 5) {
+    if (selectedRows.value.length !== 1) {
+      ElMessage.warning('请先选中一条记录')
+      return
+    }
+    const row = selectedRows.value[0]
+    if (!row.brandId) {
+      ElMessage.warning('该记录未关联商标')
+      return
+    }
+    router.push({ name: 'Renewal', query: { brandId: row.brandId } })
+    return
+  }
+  // 转让：同样需先选中一条记录，携带商标ID跳转转让编制页
+  if (type === 4) {
+    if (selectedRows.value.length !== 1) {
+      ElMessage.warning('请先选中一条记录')
+      return
+    }
+    const row = selectedRows.value[0]
+    if (!row.brandId) {
+      ElMessage.warning('该记录未关联商标')
+      return
+    }
+    router.push({ name: 'Transfer', query: { brandId: row.brandId } })
+    return
+  }
+  // 异议申请：同样需先选中一条记录，携带商标ID跳转异议编制页
+  if (type === 6) {
+    if (selectedRows.value.length !== 1) {
+      ElMessage.warning('请先选中一条记录')
+      return
+    }
+    const row = selectedRows.value[0]
+    if (!row.brandId) {
+      ElMessage.warning('该记录未关联商标')
+      return
+    }
+    router.push({ name: 'Opposition', query: { brandId: row.brandId } })
+    return
+  }
+  // 驳回复审：同样需先选中一条记录，携带商标ID跳转驳回复审编制页
+  if (type === 10) {
+    if (selectedRows.value.length !== 1) {
+      ElMessage.warning('请先选中一条记录')
+      return
+    }
+    const row = selectedRows.value[0]
+    if (!row.brandId) {
+      ElMessage.warning('该记录未关联商标')
+      return
+    }
+    router.push({ name: 'RejectionReview', query: { brandId: row.brandId } })
     return
   }
   // 跳转到编制申请页面，携带申请类型参数
