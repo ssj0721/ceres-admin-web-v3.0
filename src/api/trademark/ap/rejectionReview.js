@@ -96,3 +96,7 @@ export function rejectionReviewGetBrandInfo(brandId) {
     method: 'get',
   })
 }
+
+export function rejectionReviewCheckConflict(brandId) {
+  return request({ url: `/rejectionReview/checkConflict/${brandId}`, method: 'get' })
+}

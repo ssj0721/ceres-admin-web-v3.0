@@ -129,3 +129,26 @@ div:focus {
   background: #BDC4DB;
   border-radius: 4px;
 }
+
+/* ===== 商标申请/确认页 小屏响应式兜底（防止输入框被压缩） ===== */
+@media (max-width: 1600px) {
+  .form-page .form-grid { padding: 0 40px 0 20px !important; gap: 16px 40px !important; }
+  .form-page .form-basic-row-full { padding: 12px 40px 0 20px !important; }
+  .form-page .form-row-full { padding-right: 40px !important; }
+  .form-page .categoryTable { padding: 0 20px !important; }
+  .form-page .attachment-content .attachment-item { padding: 0 40px 0 20px !important; }
+  .form-page .form-row .form-label,
+  .form-page .form-basic-row-full .form-label,
+  .form-page .form-row-full .form-label { flex: 0 0 130px !important; }
+}
+@media (max-width: 1200px) {
+  .form-page .form-grid { grid-template-columns: 1fr !important; }
+  .form-page .section { overflow-x: auto; }
+  .form-page .info-table { min-width: 960px; }
+  .form-page .categoryTable { overflow-x: auto; }
+  .form-page .categoryTable .el-table { min-width: 900px; }
+}
+/* 输入控件最小宽度，避免极端压缩 */
+.form-page .form-input .el-input,
+.form-page .form-input .el-select,
+.form-page .form-input .el-date-editor { min-width: 140px; }

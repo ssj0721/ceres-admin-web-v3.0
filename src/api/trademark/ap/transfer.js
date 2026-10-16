@@ -96,3 +96,7 @@ export function transferGetBrandInfo(brandId) {
     method: 'get',
   })
 }
+
+export function transferCheckConflict(brandId) {
+  return request({ url: `/transfer/checkConflict/${brandId}`, method: 'get' })
+}

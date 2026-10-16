@@ -144,6 +144,46 @@ export const mainRoutes = [
         component:()=>import('@/views/trademark/ap/transfer/confirm.vue')
       },
       {
+        path:'/trademark/ap/correction/form',
+        name:'Correction',
+        component:()=>import('@/views/trademark/ap/correction/form.vue')
+      },
+      {
+        path:'/trademark/ap/adminlit/form',
+        name:'AdminLit',
+        component:()=>import('@/views/trademark/ap/adminlit/form.vue')
+      },
+      {
+        path:'/trademark/ap/respreview/form',
+        name:'RespReview',
+        component:()=>import('@/views/trademark/ap/respreview/form.vue')
+      },
+      {
+        path:'/trademark/ap/respreview/confirm',
+        name:'RespReviewConfirm',
+        component:()=>import('@/views/trademark/ap/respreview/confirm.vue')
+      },
+      {
+        path:'/trademark/ap/oppreview/form',
+        name:'OppReview',
+        component:()=>import('@/views/trademark/ap/oppreview/form.vue')
+      },
+      {
+        path:'/trademark/ap/oppreview/confirm',
+        name:'OppReviewConfirm',
+        component:()=>import('@/views/trademark/ap/oppreview/confirm.vue')
+      },
+      {
+        path:'/trademark/ap/defense/form',
+        name:'Defense',
+        component:()=>import('@/views/trademark/ap/defense/form.vue')
+      },
+      {
+        path:'/trademark/ap/defense/confirm',
+        name:'DefenseConfirm',
+        component:()=>import('@/views/trademark/ap/defense/confirm.vue')
+      },
+      {
         path:'/trademark/ap/opposition/form',
         name:'Opposition',
         component:()=>import('@/views/trademark/ap/opposition/form.vue')

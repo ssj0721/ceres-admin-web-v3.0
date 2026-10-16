@@ -37,149 +37,81 @@
       </table>
     </div>
 
-    <!-- 商标信息：项目 | 申请信息 | 确认信息 -->
+    <!-- 商标信息：申请信息 | 确认信息 -->
     <div class="section">
       <div class="section-header" @click="toggle('brand')">
         <span class="section-title"><span class="section-bar"></span>商标信息</span>
         <el-icon class="collapse-icon" :class="{ collapsed: collapsed.brand }"><DArrowRight /></el-icon>
       </div>
-      <table v-show="!collapsed.brand" class="info-table three-col">
+      <table v-show="!collapsed.brand" class="info-table four-col">
         <colgroup>
-          <col style="width: 20%" /><col style="width: 40%" /><col style="width: 40%" />
+          <col style="width: 16%" /><col style="width: 34%" /><col style="width: 16%" /><col style="width: 34%" />
         </colgroup>
-        <tr>
-          <td class="info-label">项目</td>
-          <td class="info-label">申请信息</td>
-          <td class="info-label">确认信息</td>
-        </tr>
-        <tr>
-          <td class="info-label">商标系列</td>
-          <td class="info-value">-</td>
-          <td class="info-value"><el-input v-model="form.trademarkSeries" placeholder="请输入" :disabled="isReadonly" /></td>
-        </tr>
-        <tr>
-          <td class="info-label">商标注册日期</td>
-          <td class="info-value">-</td>
-          <td class="info-value">
-            <el-date-picker v-model="form.trademarkRegisterDate" type="date" value-format="YYYY-MM-DD" placeholder="请选择" :disabled="isReadonly" style="width: 100%" />
-          </td>
-        </tr>
-        <tr>
-          <td class="info-label">所属国家/地区</td>
-          <td class="info-value">{{ applyInfo.applyCountryRegion || '-' }}</td>
-          <td class="info-value">
-            <el-select v-model="form.countryRegionId" placeholder="请选择" filterable :disabled="isReadonly" style="width: 100%">
-              <el-option v-for="item in options.countryRegion" :key="item.id" :label="item.name" :value="item.id" />
-            </el-select>
-          </td>
-        </tr>
-        <tr>
-          <td class="info-label">商标申请/注册编号</td>
-          <td class="info-value">{{ applyInfo.applyRegisterNo || '-' }}</td>
-          <td class="info-value"><el-input v-model="form.registerNumber" placeholder="请输入" :disabled="isReadonly" /></td>
-        </tr>
-        <tr>
-          <td class="info-label">商标申请人/出让人</td>
-          <td class="info-value">{{ applyInfo.transferorName || '-' }}</td>
-          <td class="info-value"><el-input v-model="form.confirmTransferorName" placeholder="请输入" :disabled="isReadonly" /></td>
-        </tr>
-        <tr>
-          <td class="info-label">出让人注册地址</td>
-          <td class="info-value">{{ applyInfo.transferorAddress || '-' }}</td>
-          <td class="info-value"><el-input v-model="form.transferorRegisterAddress" placeholder="请输入" :disabled="isReadonly" /></td>
-        </tr>
-        <tr>
-          <td class="info-label">商标受让人</td>
-          <td class="info-value">{{ applyInfo.transfereeName || '-' }}</td>
-          <td class="info-value"><el-input v-model="form.confirmTransfereeName" placeholder="请输入" :disabled="isReadonly" /></td>
-        </tr>
-        <tr>
-          <td class="info-label">受让人地址</td>
-          <td class="info-value">{{ applyInfo.transfereeAddress || '-' }}</td>
-          <td class="info-value"><el-input v-model="form.confirmTransfereeAddress" placeholder="请输入" :disabled="isReadonly" /></td>
-        </tr>
-        <tr>
-          <td class="info-label">商标首次注册期限起始日</td>
-          <td class="info-value">-</td>
-          <td class="info-value">
-            <el-date-picker v-model="form.firstRegisterStartDate" type="date" value-format="YYYY-MM-DD" placeholder="请选择" :disabled="isReadonly" style="width: 100%" />
-          </td>
-        </tr>
-        <tr>
-          <td class="info-label">原商标专用权开始日期</td>
-          <td class="info-value">{{ applyInfo.applyValidityStartDate || '-' }}</td>
-          <td class="info-value">
-            <el-date-picker v-model="form.originalValidityStartDate" type="date" value-format="YYYY-MM-DD" placeholder="请选择" :disabled="isReadonly" style="width: 100%" />
-          </td>
-        </tr>
-        <tr>
-          <td class="info-label">原商标专用权结束日期</td>
-          <td class="info-value">{{ applyInfo.applyValidityEndDate || '-' }}</td>
-          <td class="info-value">
-            <el-date-picker v-model="form.originalValidityEndDate" type="date" value-format="YYYY-MM-DD" placeholder="请选择" :disabled="isReadonly" style="width: 100%" />
-          </td>
-        </tr>
-        <tr>
-          <td class="info-label">转让后商标专用权开始日期</td>
-          <td class="info-value">-</td>
-          <td class="info-value">
-            <el-date-picker v-model="form.transferValidityStartDate" type="date" value-format="YYYY-MM-DD" placeholder="请选择" :disabled="isReadonly" style="width: 100%" />
-          </td>
-        </tr>
-        <tr>
-          <td class="info-label">转让后商标专用权结束日期</td>
-          <td class="info-value">-</td>
-          <td class="info-value">
-            <el-date-picker v-model="form.transferValidityEndDate" type="date" value-format="YYYY-MM-DD" placeholder="请选择" :disabled="isReadonly" style="width: 100%" />
-          </td>
-        </tr>
-        <tr>
-          <td class="info-label">类别数量</td>
-          <td class="info-value">{{ applyInfo.applyClassCount ?? '-' }}</td>
-          <td class="info-value"><el-input v-model="form.classCount" placeholder="请输入" type="number" :disabled="isReadonly" /></td>
-        </tr>
-        <tr>
-          <td class="info-label">商标图样</td>
-          <td class="info-value">
-            <img v-if="applyBrandImageUrl" :src="applyBrandImageUrl" class="brand-preview-img" />
-            <span v-else>-</span>
-          </td>
-          <td class="info-value">
-            <div class="brand-preview-wrap">
-              <img v-if="confirmBrandImageUrl" :src="confirmBrandImageUrl" class="brand-preview-img" />
-              <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" accept=".jpg,.jpeg" :show-file-list="false" :on-change="handleConfirmPicChange">
-                <el-button class="btn-upload" plain>{{ confirmBrandImageUrl ? '重新上传' : '上传图片' }}</el-button>
-              </el-upload>
-            </div>
-          </td>
-        </tr>
+        <thead>
+          <tr>
+            <th class="info-label" colspan="2">申请信息</th>
+            <th class="info-label req-label" colspan="2">确认信息</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="info-label">境内/境外</td><td class="info-value">{{ scopeLabel }}</td><td class="info-label">/</td><td class="info-value">/</td></tr>
+          <tr><td class="info-label">转让类型</td><td class="info-value">{{ transferTypeLabel }}</td><td class="info-label">/</td><td class="info-value">/</td></tr>
+          <tr><td class="info-label">商标</td><td class="info-value"><img v-if="applyBrandImageUrl" :src="applyBrandImageUrl" class="brand-preview-img" /><span v-else>-</span></td><td class="info-label req-label">申请/注册商标</td><td class="info-value"><el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" accept=".jpg,.jpeg" :show-file-list="false" :on-change="handleConfirmPicChange"><el-button class="btn-upload" plain>上传图片</el-button></el-upload><img v-if="confirmBrandImageUrl" :src="confirmBrandImageUrl" class="brand-preview-img" /></td></tr>
+          <tr><td class="info-label">/</td><td class="info-value"></td><td class="info-label req-label">商标系列</td><td class="info-value"><el-select v-model="form.trademarkSeries" placeholder="请选择" filterable :disabled="isReadonly" style="width: 100%"><el-option v-for="item in options.brandSeries" :key="item.id" :label="item.seriesName" :value="item.seriesName" /></el-select></td></tr>
+          <tr><td class="info-label">/</td><td class="info-value"></td><td class="info-label req-label">商标注册日期</td><td class="info-value"><el-date-picker v-model="form.trademarkRegisterDate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" :disabled="isReadonly" style="width: 100%" /></td></tr>
+          <tr><td class="info-label">所属地区/国家</td><td class="info-value">{{ applyInfo.applyCountryRegion || '-' }}</td><td class="info-label req-label">商标所属国家/地区</td><td class="info-value"><el-select v-model="form.countryRegionId" placeholder="请选择" filterable :disabled="isReadonly" style="width: 100%"><el-option v-for="item in options.countryRegion" :key="item.id" :label="item.name" :value="item.id" /></el-select></td></tr>
+          <tr><td class="info-label">出让人名称</td><td class="info-value">{{ applyInfo.transferorName || '-' }}</td><td class="info-label req-label">商标申请人/出让人</td><td class="info-value"><el-input v-model="form.confirmTransferorName" placeholder="请输入" :disabled="isReadonly" /></td></tr>
+          <tr><td class="info-label">出让人地址</td><td class="info-value">{{ applyInfo.transferorAddress || '-' }}</td><td class="info-label req-label">出让人注册地址</td><td class="info-value"><el-input v-model="form.transferorRegisterAddress" placeholder="请输入" :disabled="isReadonly" /></td></tr>
+          <tr><td class="info-label">商标申请/注册号</td><td class="info-value link">{{ applyInfo.applyRegisterNo || '-' }}</td><td class="info-label req-label">商标申请/注册编号</td><td class="info-value"><el-input v-model="form.registerNumber" placeholder="请输入" :disabled="isReadonly" /></td></tr>
+          <tr><td class="info-label">受让人名称</td><td class="info-value">{{ applyInfo.transfereeName || '-' }}</td><td class="info-label req-label">商标受让人</td><td class="info-value"><el-input v-model="form.confirmTransfereeName" placeholder="请输入" :disabled="isReadonly" /></td></tr>
+          <tr><td class="info-label">受让人地址</td><td class="info-value">{{ applyInfo.transfereeAddress || '-' }}</td><td class="info-label req-label">受让人地址</td><td class="info-value"><el-input v-model="form.confirmTransfereeAddress" placeholder="请输入" :disabled="isReadonly" /></td></tr>
+          <tr><td class="info-label">/</td><td class="info-value"></td><td class="info-label req-label">首次注册期限起始日</td><td class="info-value"><el-date-picker v-model="form.firstRegisterStartDate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" :disabled="isReadonly" style="width: 100%" /></td></tr>
+          <tr><td class="info-label">原商标专用权期限</td><td class="info-value">{{ originalValidityText }}</td><td class="info-label req-label">原商标专用权期限</td><td class="info-value"><el-date-picker v-model="originalValidityRange" type="daterange" range-separator="至" start-placeholder="开始" end-placeholder="结束" value-format="YYYY-MM-DD" :disabled="isReadonly" style="width: 100%" /></td></tr>
+          <tr><td class="info-label">/</td><td class="info-value"></td><td class="info-label req-label">转让后商标专用权期限</td><td class="info-value"><el-date-picker v-model="transferValidityRange" type="daterange" range-separator="至" start-placeholder="开始" end-placeholder="结束" value-format="YYYY-MM-DD" :disabled="isReadonly" style="width: 100%" /></td></tr>
+          <tr><td class="info-label">类别数量</td><td class="info-value">{{ applyInfo.applyClassCount ?? '-' }}</td><td class="info-label req-label">类别数量</td><td class="info-value"><el-input v-model="form.classCount" placeholder="请输入" type="number" :disabled="isReadonly" /></td></tr>
+        </tbody>
       </table>
 
-      <!-- 类别确认表（受理结果 + 确认转让项目） -->
+      <!-- 类别确认表：类别编号 | 申请转让 | 确认转让(受理结果+项目) | 操作 -->
       <div v-show="!collapsed.brand" class="categoryTable">
         <el-table :data="form.confirmClasses" :header-cell-style="confirmHeaderStyle" :cell-style="{ height: '50px' }">
-          <el-table-column type="index" label="序号" width="70" align="center" />
-          <el-table-column prop="classNo" label="类别编号" width="110" align="center" />
-          <el-table-column prop="productService" label="申请转让的商品/服务项目" min-width="260" show-overflow-tooltip />
-          <el-table-column label="类别受理结果" width="180" align="center">
+          <el-table-column width="120" align="center"><template #header><span class="req-star">*</span> 类别编号</template>
+            <template #default="scope"><el-input v-model="scope.row.classNo" placeholder="请输入" :disabled="isReadonly" /></template>
+          </el-table-column>
+          <el-table-column label="申请转让的商品/服务项目" min-width="300">
+            <template #default="scope"><span>{{ scope.row.productService || '/' }}</span></template>
+          </el-table-column>
+          <el-table-column min-width="340"><template #header><span class="req-star">*</span> 确认转让的商品/服务项目</template>
             <template #default="scope">
-              <el-select v-model="scope.row.acceptResult" placeholder="请选择" :disabled="isReadonly" style="width: 100%">
-                <el-option v-for="item in acceptResultOptions" :key="item.value" :label="item.label" :value="item.value" />
-              </el-select>
+              <div style="display: flex; gap: 8px">
+                <el-select v-model="scope.row.acceptResult" placeholder="选择受理结果" :disabled="isReadonly" style="width: 140px">
+                  <el-option v-for="item in acceptResultOptions" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+                <el-input v-model="scope.row.approvedGoods" placeholder="请输入" :disabled="isReadonly" />
+              </div>
             </template>
           </el-table-column>
-          <el-table-column label="确认转让的商品/服务项目" min-width="260">
+          <el-table-column label="操作" width="100" align="center">
             <template #default="scope">
-              <el-input v-model="scope.row.approvedGoods" placeholder="请输入" :disabled="isReadonly" />
+              <div class="category-actions">
+                <el-button class="btn-circle" :disabled="isReadonly" @click="addClass(scope.$index)"><el-icon><Plus /></el-icon></el-button>
+                <el-button class="btn-circle" :disabled="isReadonly || form.confirmClasses.length <= 1" @click="removeClass(scope.$index)"><el-icon><Minus /></el-icon></el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>
       </div>
+    </div>
 
-      <!-- 商标注册证意见 -->
-      <div v-show="!collapsed.brand" class="block-body">
+    <!-- 批件与意见信息 -->
+    <div class="section">
+      <div class="section-header" @click="toggle('opinion')">
+        <span class="section-title"><span class="section-bar"></span>批件与意见信息</span>
+        <el-icon class="collapse-icon" :class="{ collapsed: collapsed.opinion }"><DArrowRight /></el-icon>
+      </div>
+      <div v-show="!collapsed.opinion" class="block-body">
         <div class="block-row">
-          <label class="block-label">商标注册证意见：</label>
+          <label class="block-label">商标注册证：</label>
           <div class="block-input">
             <el-input v-model="form.registerCertOpinion" type="textarea" :rows="3" placeholder="请输入" :disabled="isReadonly" />
             <div class="upload-line">
@@ -187,12 +119,12 @@
                 <el-button class="btn-upload" plain>上传附件</el-button>
               </el-upload>
               <a v-if="form.registerCertAttachment && !pendingFiles.registerCertAttachment && fileUrlMap['registerCertAttachment']" :href="fileUrlMap['registerCertAttachment'].url" target="_blank" class="file-link" @click.stop>{{ fileUrlMap['registerCertAttachment'].name || '查看文件' }}</a>
-<span v-else-if="form.registerCertAttachment && !pendingFiles.registerCertAttachment" class="uploaded-tip">已上传附件</span>
+              <span v-else-if="form.registerCertAttachment && !pendingFiles.registerCertAttachment" class="uploaded-tip">已上传附件</span>
             </div>
           </div>
         </div>
         <div class="block-row">
-          <label class="block-label">商标核准转让证明意见：</label>
+          <label class="block-label">商标核/准转让证明：</label>
           <div class="block-input">
             <el-input v-model="form.transferApproveOpinion" type="textarea" :rows="3" placeholder="请输入" :disabled="isReadonly" />
             <div class="upload-line">
@@ -200,7 +132,7 @@
                 <el-button class="btn-upload" plain>上传附件</el-button>
               </el-upload>
               <a v-if="form.transferApproveAttachment && !pendingFiles.transferApproveAttachment && fileUrlMap['transferApproveAttachment']" :href="fileUrlMap['transferApproveAttachment'].url" target="_blank" class="file-link" @click.stop>{{ fileUrlMap['transferApproveAttachment'].name || '查看文件' }}</a>
-<span v-else-if="form.transferApproveAttachment && !pendingFiles.transferApproveAttachment" class="uploaded-tip">已上传附件</span>
+              <span v-else-if="form.transferApproveAttachment && !pendingFiles.transferApproveAttachment" class="uploaded-tip">已上传附件</span>
             </div>
           </div>
         </div>
@@ -240,16 +172,17 @@
 <script setup>
 import { transferSaveConfirm, transferSubmitConfirm, transferGetConfirmDetail } from '@/api/trademark/ap/transfer'
 import { countryRegionGetList } from '@/api/trademark/bd/countryRegion'
+import { brandSeriesGetList } from '@/api/trademark/bd/brandSeries'
 import { uploadFileApi, getImageUrl } from '@/api/file'
-import { onMounted, ref, reactive} from 'vue'
+import { onMounted, ref, reactive, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { DArrowRight } from '@element-plus/icons-vue'
+import { DArrowRight, Search, Plus, Minus } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
 
-const collapsed = ref({ basic: false, brand: false, attachment: false })
+const collapsed = ref({ basic: false, brand: false, opinion: false, attachment: false })
 // 已确认状态下为只读展示
 const isReadonly = ref(false)
 // 保存/提交进行中标记，防止连点
@@ -267,7 +200,7 @@ const confirmBrandImageUrl = ref('')
 const pendingFiles = ref({ confirmBrandPicUrl: null, registerCertAttachment: null, transferApproveAttachment: null, attachment: null })
 const fileUrlMap = reactive({})
 const attachmentList = ref([])
-const options = ref({ countryRegion: [] })
+const options = ref({ countryRegion: [], brandSeries: [] })
 
 const acceptResultOptions = [
   { value: 1, label: '通过' },
@@ -288,6 +221,20 @@ function norm(v) {
 
 const confirmHeaderStyle = { background: '#D6E8FB', textAlign: 'center', color: '#333333', fontWeight: '600' }
 
+const scopeLabel = computed(() => (applyInfo.value.applyScope === 1 ? '境内' : applyInfo.value.applyScope === 2 ? '境外' : '-'))
+const transferTypeLabel = computed(() => ({ 1: '转出', 2: '转入', 3: '内部转让' }[applyInfo.value.applyTransferType] || '-'))
+const originalValidityText = computed(() => (applyInfo.value.applyValidityStartDate || applyInfo.value.applyValidityEndDate) ? (applyInfo.value.applyValidityStartDate + ' - ' + applyInfo.value.applyValidityEndDate) : '-')
+const originalValidityRange = computed({
+  get: () => (form.value.originalValidityStartDate || form.value.originalValidityEndDate) ? [form.value.originalValidityStartDate, form.value.originalValidityEndDate] : null,
+  set: (v) => { form.value.originalValidityStartDate = v ? v[0] : ''; form.value.originalValidityEndDate = v ? v[1] : '' },
+})
+const transferValidityRange = computed({
+  get: () => (form.value.transferValidityStartDate || form.value.transferValidityEndDate) ? [form.value.transferValidityStartDate, form.value.transferValidityEndDate] : null,
+  set: (v) => { form.value.transferValidityStartDate = v ? v[0] : ''; form.value.transferValidityEndDate = v ? v[1] : '' },
+})
+function addClass(i) { form.value.confirmClasses.splice(i + 1, 0, { classNo: '', productService: '', acceptResult: null, approvedGoods: '' }) }
+function removeClass(i) { if (form.value.confirmClasses.length > 1) form.value.confirmClasses.splice(i, 1) }
+
 const form = ref({
   id: route.query.id || null,
   applyNumber: '', applyDate: '', applyPerson: '', applyDepartment: '', remarks: '',
@@ -307,15 +254,19 @@ const form = ref({
   attachment: null, remark: '',
 })
 
-onMounted(() => {
-  loadOptions()
-  if (form.value.id) loadDetail()
+onMounted(async () => {
+  await loadOptions()
+  if (form.value.id) await loadDetail()
 })
 
 async function loadOptions() {
   try {
     const c = await countryRegionGetList({ page: 1, pageSize: 1000 })
     options.value.countryRegion = (c.data && c.data.list) || []
+    try {
+      const bs = await brandSeriesGetList({ page: 1, pageSize: 1000 })
+      options.value.brandSeries = (bs.data && bs.data.list) || bs.data || []
+    } catch (e) { console.error(e) }
   } catch (e) { console.error(e) }
 }
 
@@ -380,7 +331,7 @@ async function loadDetail() {
     }
     // 申请侧图样展示
     if (d.brandPicUrl) {
-      if (/^https?:\/\//.test(d.brandPicUrl)) {
+      if (/^https?:\/\//.test(d.brandPicUrl) || d.brandPicUrl.startsWith('/')) {
         applyBrandImageUrl.value = d.brandPicUrl
       } else {
         getImageUrl(d.brandPicUrl).then(res => {
@@ -388,6 +339,15 @@ async function loadDetail() {
         }).catch(() => {})
       }
     }
+    // 确认侧为空时用申请侧值预填（前端兜底）
+    if (!form.value.confirmTransferorName) form.value.confirmTransferorName = applyInfo.value.transferorName || ''
+    if (!form.value.transferorRegisterAddress) form.value.transferorRegisterAddress = applyInfo.value.transferorAddress || ''
+    if (!form.value.registerNumber) form.value.registerNumber = applyInfo.value.applyRegisterNo || ''
+    if (form.value.countryRegionId == null && applyInfo.value.applyCountryRegion) {
+      const hit = options.value.countryRegion.find(x => x.name === applyInfo.value.applyCountryRegion)
+      if (hit) form.value.countryRegionId = hit.id
+    }
+    if (!confirmBrandImageUrl.value && applyBrandImageUrl.value) confirmBrandImageUrl.value = applyBrandImageUrl.value
     // 确认侧类别受理结果：优先确认快照，空则以申请侧类别初始化待确认行
     if (d.confirmClasses && d.confirmClasses.length) {
       form.value.confirmClasses = d.confirmClasses.map(c => ({
@@ -659,8 +619,12 @@ function handleCancel() { router.back() }
   }
 
   .brand-preview-img {
-    max-width: 160px;
-    max-height: 100px;
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    background: #FFFFFF;
+    padding: 2px;
+    border-radius: 2px;
     border: 1px solid #E8E8E8;
     border-radius: 4px;
     object-fit: contain;
@@ -707,4 +671,11 @@ function handleCancel() { router.back() }
     font-size: 14px;
   }
 }
+  .four-col thead th { background: #D6E8FB; color: #333333; font-weight: 600; text-align: center; border: 1px solid #E8E8E8; padding: 10px 12px; }
+  .req-label::before { content: '* '; color: #FF4D4F; }
+  .req-star { color: #FF4D4F; }
+  .search-icon { cursor: pointer; color: #999; }
+  .category-actions { display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-circle { border-radius: 100%; padding: 5px; }
+  .link { color: #1890FF; cursor: pointer; }
 </style>

@@ -96,3 +96,7 @@ export function brandChangeGetBrandInfo(brandId) {
     method: 'get',
   })
 }
+
+export function brandChangeCheckConflict(brandId) {
+  return request({ url: `/brandChange/checkConflict/${brandId}`, method: 'get' })
+}

@@ -34,19 +34,19 @@
         </div>
         <div v-show="!collapsed.brand" class="info-table">
           <table class="confirm-info-table">
-            <thead><tr><th style="width:180px"></th><th style="width:300px">申请信息</th><th style="width:180px">* 确认信息</th><th></th></tr></thead>
+            <thead style="background-color: #d6e8fd;"><tr><th style="width:180px"></th><th style="width:300px">申请信息</th><th style="width:180px"><span class="req-label"></span>确认信息</th><th></th></tr></thead>
             <tbody>
               <tr><td class="label-cell">商标注册编号</td><td class="value-cell link">{{ appInfo.trademarkRegisterNo }}</td><td class="label-cell">/</td><td class="value-cell">/</td></tr>
               <tr><td class="label-cell">境内/境外</td><td class="value-cell">{{ appInfo.scopeLabel }}</td><td class="label-cell">/</td><td class="value-cell">/</td></tr>
-              <tr><td class="label-cell">所属地区/国家</td><td class="value-cell"><img v-if="appInfo.brandPicUrl" :src="appInfo.brandPicUrl" class="brand-thumb" />{{ appInfo.countryRegion }}</td><td class="label-cell req-label">* 商标所属国家/地区</td><td class="value-cell"><el-select v-model="form.confirmCountryRegion" placeholder="请选择" style="width:100%" :disabled="isReadonly"><el-option label="全部" value="全部" /><el-option v-for="item in options.countryRegion" :key="item.id" :label="item.name" :value="item.name" /></el-select></td></tr>
-              <tr><td class="label-cell">/</td><td class="value-cell"></td><td class="label-cell req-label">* 异议提交日</td><td class="value-cell"><el-date-picker v-model="form.objectionSubmitDate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width:100%" :disabled="isReadonly" /></td></tr>
-              <tr><td class="label-cell">被异议商标</td><td class="value-cell"><img v-if="appInfo.brandPicUrl" :src="appInfo.brandPicUrl" class="brand-thumb" /></td><td class="label-cell">/</td><td class="value-cell">/</td></tr>
-              <tr><td class="label-cell">异议人</td><td class="value-cell">{{ appInfo.objector }}</td><td class="label-cell req-label">* 被异议人</td><td class="value-cell"><el-input v-model="form.confirmOpposedPerson" placeholder="请输入" :disabled="isReadonly" /></td></tr>
-              <tr><td class="label-cell">商标申请人</td><td class="value-cell">{{ appInfo.applyPerson }}</td><td class="label-cell req-label">* 异议人</td><td class="value-cell"><el-input v-model="form.confirmObjector" placeholder="请输入" :disabled="isReadonly" /></td></tr>
-              <tr><td class="label-cell">异议理由</td><td class="value-cell">{{ appInfo.objectionReason }}</td><td class="label-cell req-label">* 异议理由</td><td class="value-cell"><el-input v-model="form.confirmObjectionReason" placeholder="请输入" :disabled="isReadonly" /></td></tr>
-              <tr><td class="label-cell">引证商标</td><td class="value-cell"></td><td class="label-cell req-label">* 引证商标</td><td class="value-cell"><el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleFilePick(f, 'confirmCitedBrandPicUrl')"><el-button class="btn-upload" plain>上传图片</el-button></el-upload><img v-if="citedBrandPreview" :src="citedBrandPreview" class="brand-thumb" /></td></tr>
-              <tr><td class="label-cell">/</td><td class="value-cell"></td><td class="label-cell req-label">* 异议结果</td><td class="value-cell"><el-select v-model="form.objectionResult" placeholder="请选择" style="width:100%" :disabled="isReadonly"><el-option label="成立" value="成立" /><el-option label="不成立" value="不成立" /><el-option label="部分成立" value="部分成立" /></el-select></td></tr>
-              <tr><td class="label-cell">类别数量</td><td class="value-cell">{{ appInfo.classCount }}</td><td class="label-cell req-label">* 类别数量</td><td class="value-cell"><el-input v-model="form.confirmClassCount" placeholder="请输入" :disabled="isReadonly" /></td></tr>
+              <tr><td class="label-cell">所属地区/国家</td><td class="value-cell">{{ appInfo.countryRegion }}</td><td class="label-cell req-label">商标所属国家/地区</td><td class="value-cell"><el-select v-model="form.confirmCountryRegion" placeholder="请选择" style="width:100%" :disabled="isReadonly"><el-option label="全部" value="全部" /><el-option v-for="item in options.countryRegion" :key="item.id" :label="item.name" :value="item.name" /></el-select></td></tr>
+              <tr><td class="label-cell">/</td><td class="value-cell"></td><td class="label-cell req-label">异议提交日</td><td class="value-cell"><el-date-picker v-model="form.objectionSubmitDate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width:100%" :disabled="isReadonly" /></td></tr>
+              <tr><td class="label-cell">被异议商标</td><td class="value-cell"><img v-if="appInfo.brandPicUrl" :src="appInfo.brandPicUrl" class="brand-thumb" /></td><td class="label-cell req-label">被异议商标</td><td class="value-cell"><el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleFilePick(f, 'confirmOpposedBrandPicUrl')"><el-button class="btn-upload" plain>上传图片</el-button></el-upload><img v-if="opposedBrandPreview" :src="opposedBrandPreview" class="brand-thumb" /></td></tr>
+              <tr><td class="label-cell">异议人</td><td class="value-cell">{{ appInfo.objector }}</td><td class="label-cell req-label">被异议人</td><td class="value-cell"><el-input v-model="form.confirmOpposedPerson" placeholder="请输入" :disabled="isReadonly" /></td></tr>
+              <tr><td class="label-cell">商标申请人</td><td class="value-cell"><img v-if="appInfo.brandPicUrl" :src="appInfo.brandPicUrl" class="brand-thumb" />{{ appInfo.applyPerson }}</td><td class="label-cell req-label">异议人</td><td class="value-cell"><el-input v-model="form.confirmObjector" placeholder="请输入" :disabled="isReadonly" /></td></tr>
+              <tr><td class="label-cell">异议理由</td><td class="value-cell">{{ appInfo.objectionReason }}</td><td class="label-cell req-label">异议理由</td><td class="value-cell"><el-input v-model="form.confirmObjectionReason" placeholder="请输入" :disabled="isReadonly" /></td></tr>
+              <tr><td class="label-cell">引证商标</td><td class="value-cell"><img v-if="appInfo.citedBrandPicUrl" :src="appInfo.citedBrandPicUrl" class="brand-thumb" /></td><td class="label-cell req-label">引证商标</td><td class="value-cell"><el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleFilePick(f, 'confirmCitedBrandPicUrl')"><el-button class="btn-upload" plain>上传图片</el-button></el-upload><img v-if="citedBrandPreview" :src="citedBrandPreview" class="brand-thumb" /></td></tr>
+              <tr><td class="label-cell">/</td><td class="value-cell"></td><td class="label-cell req-label">异议结果</td><td class="value-cell"><el-select v-model="form.objectionResult" placeholder="请选择" style="width:100%" :disabled="isReadonly"><el-option label="成立" value="成立" /><el-option label="不成立" value="不成立" /><el-option label="部分成立" value="部分成立" /></el-select></td></tr>
+              <tr><td class="label-cell">类别数量</td><td class="value-cell">{{ appInfo.classCount }}</td><td class="label-cell req-label">类别数量</td><td class="value-cell"><el-input v-model="form.confirmClassCount" placeholder="请输入" :disabled="isReadonly" /></td></tr>
             </tbody>
           </table>
         </div>
@@ -132,6 +132,7 @@ const options = ref({ countryRegion: [] })
 const fileUrlMap = reactive({})
 const attachmentList = ref([])
 const citedBrandPreview = ref('')
+const opposedBrandPreview = ref('')
 const changeHeaderStyle = { background: '#D6E8FB', textAlign: 'center', color: '#333333', fontWeight: '600' }
 
 const basic = ref({})
@@ -140,6 +141,7 @@ const appInfo = ref({})
 const form = ref({
   id: route.query.id || null,
   confirmCountryRegion: '', objectionSubmitDate: '',
+  confirmOpposedBrandPicUrl: null,
   confirmOpposedPerson: '',
   confirmObjector: '', confirmObjectionReason: '',
   confirmCitedBrandPicUrl: null, objectionResult: '',
@@ -152,6 +154,7 @@ const form = ref({
 })
 
 const pendingFiles = ref({
+  confirmOpposedBrandPicUrl: null,
   confirmCitedBrandPicUrl: null,
   approvalOpinionAttachment: null, businessDeptOpinionAttachment: null,
   oppositionApplicationAttachment: null, attachment: null,
@@ -190,6 +193,7 @@ function buildParam() {
     id: form.value.id,
     confirmCountryRegion: form.value.confirmCountryRegion,
     objectionSubmitDate: form.value.objectionSubmitDate,
+    confirmOpposedBrandPicUrl: form.value.confirmOpposedBrandPicUrl,
     confirmOpposedPerson: form.value.confirmOpposedPerson,
     confirmObjector: form.value.confirmObjector,
     confirmObjectionReason: form.value.confirmObjectionReason,
@@ -207,11 +211,35 @@ function buildParam() {
   }
 }
 
+// 提交前校验（保存不校验，支持部分保存）
+function validateConfirm() {
+  if (!form.value.confirmCountryRegion) return '商标所属国家/地区不能为空'
+  if (!form.value.objectionSubmitDate) return '异议提交日不能为空'
+  if (!form.value.confirmOpposedBrandPicUrl && !pendingFiles.value.confirmOpposedBrandPicUrl) return '被异议商标图片不能为空'
+  if (!form.value.confirmOpposedPerson || !form.value.confirmOpposedPerson.trim()) return '被异议人不能为空'
+  if (!form.value.confirmObjector || !form.value.confirmObjector.trim()) return '异议人不能为空'
+  if (!form.value.confirmObjectionReason || !form.value.confirmObjectionReason.trim()) return '异议理由不能为空'
+  if (!form.value.confirmCitedBrandPicUrl && !pendingFiles.value.confirmCitedBrandPicUrl) return '引证商标图片不能为空'
+  if (!form.value.objectionResult) return '异议结果不能为空'
+  if (form.value.confirmClassCount === '' || form.value.confirmClassCount == null) return '类别数量不能为空'
+  const seen = []
+  for (const c of form.value.categories) {
+    if (!c.categoryNo || !String(c.categoryNo).trim()) return '类别编号不能为空'
+    const no = Number(c.categoryNo)
+    if (!Number.isInteger(no) || no < 1 || no > 45) return `类别编号“${c.categoryNo}”应为 1-45 之间的整数`
+    if (seen.includes(no)) return `类别“${no}”重复填写`
+    seen.push(no)
+  }
+  return ''
+}
+
 async function handleSave() {
   try { saving.value = true; await uploadPendingFiles(); await oppositionSaveConfirm(buildParam()); ElMessage.success('保存成功') }
   catch (e) { ElMessage.error(e.message || '保存失败') } finally { saving.value = false }
 }
 async function handleSaveAndSubmit() {
+  const err = validateConfirm()
+  if (err) { ElMessage.error(err); return }
   try { saving.value = true; await uploadPendingFiles(); await oppositionSaveConfirm(buildParam()); await oppositionSubmitConfirm(buildParam()); ElMessage.success('提交成功'); router.back() }
   catch (e) { ElMessage.error(e.message || '提交失败') } finally { saving.value = false }
 }
@@ -230,17 +258,39 @@ async function loadDetail() {
       scopeLabel: o.scopeType === 1 ? '境内' : '境外',
       countryRegion: o.countryRegion || '',
       brandPicUrl: vo.brandPicUrl || '',
+      citedBrandPicUrl: '',
       objector: o.opposedPerson || '',
       applyPerson: vo.brand?.registerPerson || vo.brand?.applyPerson || '',
       objectionReason: o.objectionReason || '',
       classCount: o.categories ? o.categories.length : 0,
     }
-    form.value.confirmCountryRegion = o.confirmCountryRegion || ''
+    form.value.confirmCountryRegion = o.confirmCountryRegion || o.countryRegion || ''
     form.value.objectionSubmitDate = o.objectionSubmitDate || ''
+    // 被异议商标：确认侧优先已保存值，否则用申请侧/主商标图预填
+    const opposedFileId = o.confirmOpposedBrandPicUrl || o.opposedBrandPicUrl || (vo.brand && vo.brand.brandPicUrl) || null
+    form.value.confirmOpposedBrandPicUrl = o.confirmOpposedBrandPicUrl || null
+    if (opposedFileId) {
+      if (/^https?:\/\//.test(opposedFileId)) {
+        opposedBrandPreview.value = opposedFileId
+      } else {
+        getImageUrl(opposedFileId).then(r => { if (r && r.data) opposedBrandPreview.value = r.data }).catch(() => {})
+      }
+      if (!form.value.confirmOpposedBrandPicUrl) form.value.confirmOpposedBrandPicUrl = opposedFileId
+    }
     form.value.confirmOpposedPerson = o.confirmOpposedPerson || o.opposedPerson || ''
     form.value.confirmObjector = o.confirmObjector || ''
     form.value.confirmObjectionReason = o.confirmObjectionReason || o.objectionReason || ''
-    form.value.confirmCitedBrandPicUrl = o.confirmCitedBrandPicUrl
+    form.value.confirmCitedBrandPicUrl = o.confirmCitedBrandPicUrl || null
+    // 引证商标：确认侧优先已保存值，否则用申请侧引证图预填
+    const citedFileId = o.confirmCitedBrandPicUrl || o.citedBrandPicUrl || null
+    if (citedFileId) {
+      if (/^https?:\/\//.test(citedFileId)) {
+        citedBrandPreview.value = citedFileId
+      } else {
+        getImageUrl(citedFileId).then(r => { if (r && r.data) citedBrandPreview.value = r.data }).catch(() => {})
+      }
+      if (!form.value.confirmCitedBrandPicUrl) form.value.confirmCitedBrandPicUrl = citedFileId
+    }
     form.value.objectionResult = o.objectionResult || ''
     form.value.confirmClassCount = o.confirmClassCount || (o.categories ? o.categories.length : '')
     form.value.categories = o.categories && o.categories.length ? o.categories : [{ categoryNo: '', productService: '', acceptanceResult: '', remark: '' }]
@@ -255,6 +305,8 @@ async function loadDetail() {
     form.value.attachment = o.attachment
     if (o.attachmentList) attachmentList.value = o.attachmentList
     form.value.remark = o.remark || ''
+    // 申请信息侧引证商标图片
+    if (o.citedBrandPicUrl) getImageUrl(o.citedBrandPicUrl).then(r => { if (r && r.data) appInfo.value.citedBrandPicUrl = r.data }).catch(() => {})
   }
 }
 
@@ -325,7 +377,7 @@ onMounted(async () => {
 .info-table { padding: 0 24px 16px; }
 .basic-info-table, .confirm-info-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .basic-info-table td, .confirm-info-table td, .confirm-info-table th { border: 1px solid #E8E8E8; padding: 10px 12px; }
-.label-cell { background: #F5F7FA; color: #666; width: 140px; text-align: center; }
+.label-cell { background: #f2f8ff; color: #666; width: 140px; text-align: center; }
 .value-cell { color: #333; }
 .link { color: #1890FF; cursor: pointer; }
 .req-label { color: #333; }

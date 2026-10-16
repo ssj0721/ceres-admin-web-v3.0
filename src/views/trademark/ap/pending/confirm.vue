@@ -435,6 +435,36 @@ function buildParam() {
   }
 }
 
+// 提交前校验（保存不校验，支持部分保存）
+function validateConfirm() {
+  if (!form.value.firstValidityStartDate) return '商标首次注册期限起始日不能为空'
+  if (!form.value.registrationDate) return '商标注册日期不能为空'
+  if (!regPeriodRange.value || !regPeriodRange.value[0] || !regPeriodRange.value[1]) return '最新注册期限不能为空'
+  if (!form.value.countryRegionId) return '商标所属国家/地区不能为空'
+  if (!form.value.registerPerson || !form.value.registerPerson.trim()) return '商标注册人不能为空'
+  if (!form.value.registerAddress || !form.value.registerAddress.trim()) return '注册人地址不能为空'
+  if (!form.value.registerNumber || !form.value.registerNumber.trim()) return '商标注册编号不能为空'
+  if (!form.value.brandPicUrl && !pendingFiles.value.brandPicUrl) return '商标图片不能为空'
+  if (!form.value.seriesId) return '商标系列不能为空'
+  if (!form.value.categories.length) return '请至少填写一条类别明细'
+  const seen = []
+  let accepted = 0
+  for (const c of form.value.categories) {
+    if (!c.categoryNo || !String(c.categoryNo).trim()) return '类别编号不能为空'
+    const no = Number(c.categoryNo)
+    if (!Number.isInteger(no) || no < 1 || no > 45) return `类别编号“${c.categoryNo}”应为 1-45 之间的整数`
+    if (seen.includes(no)) return `类别“${no}”重复填写`
+    seen.push(no)
+    if (!c.acceptResult) return `类别“${no}”的受理结果不能为空`
+    if (c.acceptResult === '1') {
+      accepted++
+      if (!c.approvedScope || !String(c.approvedScope).trim()) return `类别“${no}”的核定使用商品/服务项目不能为空`
+    }
+  }
+  if (accepted === 0) return '至少需要一个类别的受理结果为“通过”'
+  return ''
+}
+
 async function handleSave() {
   try {
     await uploadPendingFiles()
@@ -447,6 +477,8 @@ async function handleSave() {
 }
 
 async function handleSaveAndSubmit() {
+  const err = validateConfirm()
+  if (err) { ElMessage.error(err); return }
   try {
     await uploadPendingFiles()
     await registerSubmitConfirm(buildParam())

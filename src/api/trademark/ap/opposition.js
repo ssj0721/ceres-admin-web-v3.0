@@ -39,3 +39,7 @@ export function oppositionGetConfirmDetail(id) {
 export function oppositionGetBrandInfo(brandId) {
   return request({ url: `/opposition/getBrandInfo/${brandId}`, method: 'get' })
 }
+
+export function oppositionCheckConflict(brandId) {
+  return request({ url: `/opposition/checkConflict/${brandId}`, method: 'get' })
+}

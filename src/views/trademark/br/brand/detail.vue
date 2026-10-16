@@ -159,23 +159,42 @@ const latestPeriod = computed(() => {
   return `${s || '-'} - ${e || '-'}`
 })
 
-// 生命周期"商标注册"行：register 关联 basic（by basicId）
+// 生命周期 tab → 申请类型（新值域）映射；异议复审含 8/9 两类
+const tabTypes = {
+  '0': [1], '1': [3], '2': [2], '3': [4], '4': [5], '5': [6], '6': [7], '7': [8, 9], '8': [10], '9': [11],
+}
+// 生命周期行：注册 tab 用 register+basic（含确认人/时间），其余 tab 直接按类型过滤 basics（含未确认）
 const lifecycleRows = computed(() => {
-  if (activeTab.value !== '0') return []
-  const basicMap = {}
-  ;(detail.value.basics || []).forEach(b => { basicMap[b.id] = b })
-  return (detail.value.registers || []).map(r => {
-    const b = basicMap[r.basicId]
-    return {
-      basicId: r.basicId,
-      applyNumber: b ? b.applyNumber : '',
-      status: b ? b.status : null,
-      applyPerson: b ? b.applyPerson : r.applyPerson,
-      applyTime: (b && b.createTime) ? b.createTime : r.createTime,
-      confirmPerson: r.registerPerson,
-      confirmTime: r.registrationDate,
-    }
-  })
+  if (activeTab.value === '0') {
+    const basicMap = {}
+    ;(detail.value.basics || []).forEach(b => { basicMap[b.id] = b })
+    return (detail.value.registers || []).map(r => {
+      const b = basicMap[r.basicId]
+      return {
+        basicId: r.basicId,
+        type: b ? b.type : 1,
+        applyNumber: b ? b.applyNumber : '',
+        status: b ? b.status : null,
+        applyPerson: b ? b.applyPerson : r.applyPerson,
+        applyTime: (b && b.createTime) ? b.createTime : r.createTime,
+        confirmPerson: r.registerPerson,
+        confirmTime: r.registrationDate,
+      }
+    })
+  }
+  const types = tabTypes[activeTab.value] || []
+  return (detail.value.basics || [])
+    .filter(b => types.includes(b.type))
+    .map(b => ({
+      basicId: b.id,
+      type: b.type,
+      applyNumber: b.applyNumber,
+      status: b.status,
+      applyPerson: b.applyPerson,
+      applyTime: b.createTime,
+      confirmPerson: null,
+      confirmTime: null,
+    }))
 })
 
 onMounted(() => { loadDetail() })
@@ -194,9 +213,24 @@ function toggle(key) { collapsed.value[key] = !collapsed.value[key] }
 
 function handleBack() { router.back() }
 
-// 申请编号点击跳转注册单据确认页（与待办列表口径一致，传 basicId）
+// 申请编号点击按类型+状态跳转对应编制/确认页（传 basicId）
 function handleDocClick(row) {
-  if (row.basicId) router.push({ name: 'RegisterConfirm', query: { id: row.basicId } })
+  if (!row.basicId) return
+  const toConfirm = row.status === 2 || row.status === 3
+  const map = {
+    1: toConfirm ? 'RegisterConfirm' : 'Register',
+    2: toConfirm ? 'ChangeConfirm' : 'Change',
+    3: 'Correction',
+    4: toConfirm ? 'TransferConfirm' : 'Transfer',
+    5: toConfirm ? 'RenewalConfirm' : 'Renewal',
+    6: toConfirm ? 'OppositionConfirm' : 'Opposition',
+    7: toConfirm ? 'DefenseConfirm' : 'Defense',
+    8: toConfirm ? 'OppReviewConfirm' : 'OppReview',
+    9: toConfirm ? 'RespReviewConfirm' : 'RespReview',
+    10: toConfirm ? 'RejectionReviewConfirm' : 'RejectionReview',
+    11: 'AdminLit',
+  }
+  router.push({ name: map[row.type] || 'RegisterConfirm', query: { id: row.basicId } })
 }
 
 function text(val) {

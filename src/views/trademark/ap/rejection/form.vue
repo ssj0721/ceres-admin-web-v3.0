@@ -120,7 +120,7 @@
             </el-table-column>
             <el-table-column label="驳回期限" width="220">
               <template #default="scope">
-                <el-date-picker v-model="scope.row.rejectionDeadline" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD" style="width: 100%" />
+                <el-date-picker :model-value="deadlineValue(scope.row)" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD" style="width: 100%" @update:model-value="(v) => onDeadlineChange(scope.row, v)" />
               </template>
             </el-table-column>
             <el-table-column label="操作" width="140" align="center">
@@ -388,6 +388,14 @@ async function loadBrandInfo(brandId) {
     const vo = res.data
     if (!vo) return
     applyBrandVo(vo)
+    // 自动填入商标申请号/申请日期（取申请号而非注册号）
+    if (vo.rejection) {
+      if (vo.rejection.trademarkApplyNo) form.value.trademarkApplyNoInput = vo.rejection.trademarkApplyNo
+      else if (vo.brand && vo.brand.applyNo) form.value.trademarkApplyNoInput = vo.brand.applyNo
+      if (vo.rejection.trademarkApplyDate) form.value.trademarkApplyDate = vo.rejection.trademarkApplyDate
+    } else if (vo.brand && vo.brand.applyNo) {
+      form.value.trademarkApplyNoInput = vo.brand.applyNo
+    }
     // 初始化类别子表
     if (vo.categories && vo.categories.length) {
       form.value.categories = vo.categories.map(c => ({
@@ -396,7 +404,8 @@ async function loadBrandInfo(brandId) {
         rejectedProductService: c.producsecScope || '',
         rejectionReason: '',
         reviewReason: '',
-        rejectionDeadline: [],
+        rejectionDeadlineStart: '',
+        rejectionDeadlineEnd: '',
       }))
     }
   } catch (e) {
@@ -456,7 +465,15 @@ async function loadEditData(basicId) {
         getImageUrl(vo.rejection.attachment).then(r => { if (r && r.data) attachmentList.value = [{ fileName: n || '查看文件', url: r.data, fileId: vo.rejection.attachment }] }).catch(() => {})
       }
       if (vo.rejection.categories && vo.rejection.categories.length) {
-        form.value.categories = vo.rejection.categories
+        form.value.categories = vo.rejection.categories.map(c => ({
+          categoryNo: c.categoryNo,
+          productService: c.productService || '',
+          rejectedProductService: c.rejectedProductService || '',
+          rejectionReason: c.rejectionReason || '',
+          reviewReason: c.reviewReason || '',
+          rejectionDeadlineStart: c.rejectionDeadlineStart || '',
+          rejectionDeadlineEnd: c.rejectionDeadlineEnd || '',
+        }))
       }
     }
   } catch (e) {
@@ -525,6 +542,14 @@ async function uploadPendingFiles() {
   }
 }
 
+function deadlineValue(row) {
+  return row.rejectionDeadlineStart && row.rejectionDeadlineEnd ? [row.rejectionDeadlineStart, row.rejectionDeadlineEnd] : []
+}
+function onDeadlineChange(row, val) {
+  row.rejectionDeadlineStart = val && val[0] ? val[0] : ''
+  row.rejectionDeadlineEnd = val && val[1] ? val[1] : ''
+}
+
 function addCategory(index) {
   const row = {
     categoryNo: null,
@@ -532,7 +557,8 @@ function addCategory(index) {
     rejectedProductService: '',
     rejectionReason: '',
     reviewReason: '',
-    rejectionDeadline: [],
+    rejectionDeadlineStart: '',
+    rejectionDeadlineEnd: '',
   }
   if (index !== undefined && index >= 0 && index <= form.value.categories.length) {
     form.value.categories.splice(index, 0, row)

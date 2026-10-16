@@ -96,3 +96,7 @@ export function renewalGetBrandInfo(brandId) {
     method: 'get',
   })
 }
+
+export function renewalCheckConflict(brandId) {
+  return request({ url: `/renewal/checkConflict/${brandId}`, method: 'get' })
+}

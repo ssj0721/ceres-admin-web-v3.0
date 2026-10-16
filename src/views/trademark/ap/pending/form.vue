@@ -332,7 +332,7 @@ function getToday() {
 }
 
 const form = ref({
-  type: Number(route.query.type ?? 0),
+  type: Number(route.query.type ?? 1),
   applyNumber: '',
   applyDate: getToday(),
   applyPerson: getUserName() || '',
@@ -714,7 +714,7 @@ function handleCancel(){router.back()}
 
   .form-row {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
 
     .form-label {
       flex: 0 0 150px;
