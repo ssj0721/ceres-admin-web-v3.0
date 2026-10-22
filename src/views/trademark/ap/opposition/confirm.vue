@@ -104,7 +104,7 @@
           <el-icon class="collapse-icon" :class="{ collapsed: collapsed.attachment }"><DArrowRight /></el-icon>
         </div>
         <div v-show="!collapsed.attachment" class="attachment-content">
-          <div class="attachment-item"><label class="attachment-label">附件：</label><div class="attachment-input"><el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :on-change="(f) => handleOpinionUpload(f, 'attachment')"><el-button class="btn-upload" plain>{{ form.attachment ? '重新上传' : '上传文件' }}</el-button></el-upload><template v-for="(att, idx) in attachmentList" :key="idx"><a v-if="att.url" :href="att.url" target="_blank" class="file-link">{{ att.fileName || '查看文件' }}</a></template></div></div>
+          <div class="attachment-item"><label class="attachment-label">附件：</label><div class="attachment-input"><AttachmentUpload ref="attUpload" v-model="attachmentList" :readonly="isReadonly" /></div></div>
           <div class="attachment-item"><label class="attachment-label">备注：</label><div class="attachment-input"><el-input v-model="form.remark" type="textarea" :rows="3" placeholder="请输入" :disabled="isReadonly" /></div></div>
         </div>
       </div>
@@ -120,6 +120,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { oppositionGetConfirmDetail, oppositionSaveConfirm, oppositionSubmitConfirm } from '@/api/trademark/ap/opposition'
 import { countryRegionGetList } from '@/api/trademark/bd/countryRegion'
 import { uploadFileApi, getImageUrl } from '@/api/file'
+import AttachmentUpload from '@/components/AttachmentUpload.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -131,6 +132,7 @@ function toggle(key) { collapsed.value[key] = !collapsed.value[key] }
 const options = ref({ countryRegion: [] })
 const fileUrlMap = reactive({})
 const attachmentList = ref([])
+const attUpload = ref(null)
 const citedBrandPreview = ref('')
 const opposedBrandPreview = ref('')
 const changeHeaderStyle = { background: '#D6E8FB', textAlign: 'center', color: '#333333', fontWeight: '600' }
@@ -207,6 +209,7 @@ function buildParam() {
     businessDeptOpinionAttachment: form.value.businessDeptOpinionAttachment,
     oppositionApplicationAttachment: form.value.oppositionApplicationAttachment,
     attachment: form.value.attachment,
+    attachments: attachmentList.value.map(a => a.fileId).filter(Boolean),
     remark: form.value.remark,
   }
 }
@@ -234,13 +237,15 @@ function validateConfirm() {
 }
 
 async function handleSave() {
-  try { saving.value = true; await uploadPendingFiles(); await oppositionSaveConfirm(buildParam()); ElMessage.success('保存成功') }
+  try { saving.value = true; await uploadPendingFiles()
+    if (attUpload.value) await attUpload.value.flush(); await oppositionSaveConfirm(buildParam()); ElMessage.success('保存成功') }
   catch (e) { ElMessage.error(e.message || '保存失败') } finally { saving.value = false }
 }
 async function handleSaveAndSubmit() {
   const err = validateConfirm()
   if (err) { ElMessage.error(err); return }
-  try { saving.value = true; await uploadPendingFiles(); await oppositionSaveConfirm(buildParam()); await oppositionSubmitConfirm(buildParam()); ElMessage.success('提交成功'); router.back() }
+  try { saving.value = true; await uploadPendingFiles()
+    if (attUpload.value) await attUpload.value.flush(); await oppositionSaveConfirm(buildParam()); await oppositionSubmitConfirm(buildParam()); ElMessage.success('提交成功'); router.back() }
   catch (e) { ElMessage.error(e.message || '提交失败') } finally { saving.value = false }
 }
 function handleCancel() { router.back() }

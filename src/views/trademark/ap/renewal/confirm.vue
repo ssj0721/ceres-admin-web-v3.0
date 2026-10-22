@@ -152,7 +152,7 @@
           <div class="block-input">
             <el-input v-model="form.renewalCertOpinion" type="textarea" :rows="3" placeholder="请输入" :disabled="isReadonly" />
             <div class="upload-line">
-              <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleFilePick(f, 'renewalCertAttachment')">
+              <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :on-change="(f) => handleFilePick(f, 'renewalCertAttachment')">
                 <el-button class="btn-upload" plain>上传附件</el-button>
               </el-upload>
               <a v-if="form.renewalCertAttachment && !pendingFiles.renewalCertAttachment && fileUrlMap['renewalCertAttachment']" :href="fileUrlMap['renewalCertAttachment'].url" target="_blank" class="file-link" @click.stop>{{ fileUrlMap['renewalCertAttachment'].name || '查看文件' }}</a>
@@ -174,13 +174,8 @@
           <label class="block-label">附件：</label>
           <div class="block-input">
             <div class="upload-line">
-              <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleFilePick(f, 'attachment')">
-                <el-button class="btn-upload" plain>上传文件</el-button>
-              </el-upload>
-              <template v-for="(att, idx) in attachmentList" :key="idx">
-                <a v-if="att.url" :href="att.url" target="_blank" class="file-link" @click.stop>{{ att.fileName || '查看文件' }}</a>
-                </template>
-              <span v-if="form.attachment && !pendingFiles.attachment && !attachmentList.length" class="uploaded-tip">已上传附件</span>
+              <AttachmentUpload ref="attUpload" v-model="attachmentList" :readonly="isReadonly" />
+              
             </div>
           </div>
         </div>
@@ -197,6 +192,7 @@
 import { renewalSaveConfirm, renewalSubmitConfirm, renewalGetConfirmDetail } from '@/api/trademark/ap/renewal'
 import { countryRegionGetList } from '@/api/trademark/bd/countryRegion'
 import { uploadFileApi, getImageUrl } from '@/api/file'
+import AttachmentUpload from '@/components/AttachmentUpload.vue'
 import { onMounted, ref, reactive} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
@@ -223,6 +219,7 @@ const confirmBrandImageUrl = ref('')
 const pendingFiles = ref({ confirmBrandPicUrl: null, renewalCertAttachment: null, attachment: null })
 const fileUrlMap = reactive({})
 const attachmentList = ref([])
+const attUpload = ref(null)
 const options = ref({ countryRegion: [] })
 
 const acceptResultOptions = [
@@ -431,6 +428,7 @@ function buildParam() {
     renewalCertOpinion: form.value.renewalCertOpinion,
     renewalCertAttachment: form.value.renewalCertAttachment,
     attachment: form.value.attachment,
+    attachments: attachmentList.value.map(a => a.fileId).filter(Boolean),
     remark: form.value.remark,
   }
 }
@@ -440,6 +438,7 @@ async function doSave() {
   saving.value = true
   try {
     await uploadPendingFiles()
+    if (attUpload.value) await attUpload.value.flush()
     await renewalSaveConfirm(buildParam())
     ElMessage.success('保存成功')
     return true
@@ -463,6 +462,7 @@ async function handleSaveAndSubmit() {
   saving.value = true
   try {
     await uploadPendingFiles()
+    if (attUpload.value) await attUpload.value.flush()
     await renewalSubmitConfirm(buildParam())
     ElMessage.success('确认提交成功')
     router.back()

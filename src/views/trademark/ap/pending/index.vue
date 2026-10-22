@@ -54,9 +54,10 @@
           <el-button type="primary" class="btn-create" @click="showCreateDialog = true">+ 创建申请</el-button>
         </div>
         <div class="action-right">
-          <el-button class="btn-outline" @click="handleBatchDelete">批量删除</el-button>
+          <el-button class="btn-outline" @click="handleBatchDelete" v-if="activeTab === 0">批量删除</el-button>
           <el-button class="btn-outline" @click="handleExport">导出excel</el-button>
           <el-button class="btn-outline" @click="handleBatchSubmit" v-if="activeTab === 0">提交</el-button>
+          <el-button class="btn-outline" @click="handleBatchWithdraw" v-if="activeTab === 1">撤回</el-button>
         </div>
       </div>
 
@@ -88,9 +89,7 @@
             <template #default="scope">
               <el-button v-if="activeTab === 0" type="primary" link @click="handleSubmit(scope.row)">提交</el-button>
               <el-button v-if="activeTab === 0" type="danger" link @click="handleDelete(scope.row)">删除</el-button>
-              <el-button v-if="activeTab === 1" type="warning" link @click="handleWithdraw(scope.row)">撤回</el-button>
               <el-button v-if="activeTab === 1" type="success" link @click="handleApprove(scope.row)">同意</el-button>
-              <el-button v-if="activeTab === 1" type="primary" link @click="handleExportRow(scope.row)">导出</el-button>
               <el-button v-if="activeTab === 2" type="primary" link @click="handleConfirm(scope.row)">确认</el-button>
             </template>
           </el-table-column>
@@ -114,12 +113,14 @@
 
       <!-- 创建申请弹窗 -->
       <CreateDialog v-model:show="showCreateDialog" @confirm="handleCreateConfirm" />
+      <ExportDialog v-model:show="showExportDialog" :ids="exportIds" :types="exportTypes" :filters="{ status: activeTab, applyMessage: formInline.applyMessage, applyScope: formInline.applyScope, country_id: formInline.country_id, beginDate: dateRange[0], endDate: dateRange[1] }" />
     </div>
   </div>
 </template>
 
 <script setup>
 import CreateDialog from './createDialog.vue'
+import ExportDialog from './exportDialog.vue'
 import { basicGetList, basicDelete, basicDeleteBatch } from '@/api/trademark/ap/basic'
 import { registerSubmit, registerUnapprove, registerApprove } from '@/api/trademark/ap/register'
 import { brandChangeSubmit, brandChangeUnapprove, brandChangeApprove } from '@/api/trademark/ap/brandChange'
@@ -146,6 +147,9 @@ const router = useRouter()
 
 const activeTab = ref(0)
 const showCreateDialog = ref(false)
+const showExportDialog = ref(false)
+const exportIds = ref([])
+const exportTypes = ref([])
 const tableLoading = ref(false)
 const list = ref([])
 const dateRange = ref([])
@@ -243,6 +247,14 @@ function handleBatchSubmit() {
   ElMessageBox.confirm('确认提交选中的 ' + selectedRows.value.length + ' 条记录？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }).then(() => {
     const promises = selectedRows.value.map(row => (row.type === 2 ? brandChangeSubmit : (row.type === 4 ? transferSubmit : (row.type === 5 ? renewalSubmit : (row.type === 6 ? oppositionSubmit : row.type === 7 ? defenseSubmit : row.type === 8 ? oppReviewSubmit : row.type === 9 ? respReviewSubmit : row.type === 3 ? correctionSubmit : row.type === 11 ? adminLitSubmit : row.type === 10 ? rejectionReviewSubmit : registerSubmit))))(row.id))
     Promise.all(promises).then(() => { ElMessage.success('批量提交成功'); handleGetTable() })
+  }).catch(() => {})
+}
+
+function handleBatchWithdraw() {
+  if (selectedRows.value.length === 0) return ElMessage.warning('请先选择要撤回的记录')
+  ElMessageBox.confirm('确认撤回选中的 ' + selectedRows.value.length + ' 条记录？撤回后将退回待提交状态', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }).then(() => {
+    const promises = selectedRows.value.map(row => (row.type === 2 ? brandChangeUnapprove : (row.type === 4 ? transferUnapprove : (row.type === 5 ? renewalUnapprove : (row.type === 6 ? oppositionUnapprove : row.type === 7 ? defenseUnapprove : row.type === 8 ? oppReviewUnapprove : row.type === 9 ? respReviewUnapprove : row.type === 3 ? correctionUnapprove : row.type === 11 ? adminLitUnapprove : row.type === 10 ? rejectionReviewUnapprove : registerUnapprove))))(row.id))
+    Promise.all(promises).then(() => { ElMessage.success('批量撤回成功'); handleGetTable() }).catch(() => { handleGetTable() })
   }).catch(() => {})
 }
 
@@ -404,8 +416,12 @@ function handleEdit(row) {
   }
   router.push({ name: 'Register', query: { id: row.id, type: row.type } })
 }
-function handleExport() { ElMessage.info('导出功能待实现') }
-function handleExportRow(row) { ElMessage.info('导出功能待实现') }
+function handleExport() {
+  if (!selectedRows.value.length) { ElMessage.warning('请先选择要导出的记录'); return }
+  exportTypes.value = Array.from(new Set(selectedRows.value.map(r => r.type)))
+  exportIds.value = selectedRows.value.map(r => r.id)
+  showExportDialog.value = true
+}
 
 const routerList = {
   1: 'Register',

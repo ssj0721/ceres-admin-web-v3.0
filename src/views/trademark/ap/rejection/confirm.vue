@@ -103,7 +103,7 @@
             <div class="form-input">
               <el-input v-model="form.reviewApplicationText" type="textarea" :rows="3" placeholder="请输入" :disabled="isReadonly" />
               <div class="opinion-upload">
-                <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleOpinionUpload(f, 'rejectionReviewAttachment')"><el-button class="btn-upload" plain size="small">{{ form.rejectionReviewAttachment ? '重新上传' : '上传附件' }}</el-button></el-upload>
+                <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :on-change="(f) => handleOpinionUpload(f, 'rejectionReviewAttachment')"><el-button class="btn-upload" plain size="small">{{ form.rejectionReviewAttachment ? '重新上传' : '上传附件' }}</el-button></el-upload>
                 <a v-if="form.rejectionReviewAttachment && fileUrlMap['rejectionReviewAttachment']" :href="fileUrlMap['rejectionReviewAttachment'].url" target="_blank" class="file-link" @click.stop>{{ fileUrlMap['rejectionReviewAttachment'].name || '查看文件' }}</a>
                 <span v-else-if="form.rejectionReviewAttachment" class="upload-status">已上传</span>
               </div>
@@ -122,8 +122,7 @@
           <div class="attachment-item">
             <label class="attachment-label">附件：</label>
             <div class="attachment-input">
-              <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleOpinionUpload(f, 'attachment')"><el-button class="btn-upload" plain>{{ form.attachment ? '重新上传' : '上传文件' }}</el-button></el-upload>
-              <template v-for="(att, idx) in attachmentList" :key="idx"><a v-if="att.url" :href="att.url" target="_blank" class="file-link" @click.stop>{{ att.fileName || '查看文件' }}</a></template>
+              <AttachmentUpload ref="attUpload" v-model="attachmentList" :readonly="isReadonly" />
             </div>
           </div>
           <div class="attachment-item">
@@ -144,6 +143,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { rejectionReviewGetConfirmDetail, rejectionReviewSaveConfirm, rejectionReviewSubmitConfirm } from '@/api/trademark/ap/rejectionReview'
 import { countryRegionGetList } from '@/api/trademark/bd/countryRegion'
 import { uploadFileApi, getImageUrl } from '@/api/file'
+import AttachmentUpload from '@/components/AttachmentUpload.vue'
 import { scopeMap } from '../config'
 
 const route = useRoute()
@@ -156,6 +156,7 @@ function toggle(key) { collapsed.value[key] = !collapsed.value[key] }
 const options = ref({ countryRegion: [] })
 const fileUrlMap = reactive({})
 const attachmentList = ref([])
+const attUpload = ref(null)
 const brandPreview = ref('')
 const changeHeaderStyle = { background: '#D6E8FB', textAlign: 'center', color: '#333333', fontWeight: '600' }
 
@@ -229,6 +230,7 @@ function buildParam() {
     categories: form.value.categories,
     rejectionReviewAttachment: form.value.rejectionReviewAttachment,
     attachment: form.value.attachment,
+    attachments: attachmentList.value.map(a => a.fileId).filter(Boolean),
     remark: form.value.remark,
   }
 }
@@ -257,13 +259,15 @@ function validateConfirm() {
 }
 
 async function handleSave() {
-  try { saving.value = true; await uploadPendingFiles(); await rejectionReviewSaveConfirm(buildParam()); ElMessage.success('保存成功') }
+  try { saving.value = true; await uploadPendingFiles()
+    if (attUpload.value) await attUpload.value.flush(); await rejectionReviewSaveConfirm(buildParam()); ElMessage.success('保存成功') }
   catch (e) { ElMessage.error(e.message || '保存失败') } finally { saving.value = false }
 }
 async function handleSaveAndSubmit() {
   const err = validateConfirm()
   if (err) { ElMessage.error(err); return }
-  try { saving.value = true; await uploadPendingFiles(); await rejectionReviewSubmitConfirm(buildParam()); ElMessage.success('提交成功'); router.back() }
+  try { saving.value = true; await uploadPendingFiles()
+    if (attUpload.value) await attUpload.value.flush(); await rejectionReviewSubmitConfirm(buildParam()); ElMessage.success('提交成功'); router.back() }
   catch (e) { ElMessage.error(e.message || '提交失败') } finally { saving.value = false }
 }
 function handleCancel() { router.back() }

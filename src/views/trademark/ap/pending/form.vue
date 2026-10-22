@@ -257,13 +257,8 @@
           <div class="attachment-item">
             <label class="attachment-label">附件：</label>
             <div class="attachment-input">
-              <el-upload :auto-upload="false" :limit="1" :on-change="(file) => handleOpinionUpload(file, 'attachment')" :on-remove="() => handleOpinionRemove('attachment')">
-                <el-button class="btn-upload" plain>{{ form.attachment ? '重新上传' : '上传文件' }}</el-button>
-              </el-upload>
-              <template v-for="(att, idx) in attachmentList" :key="idx">
-                <a v-if="att.url" :href="att.url" target="_blank" class="file-link" @click.stop>{{ att.fileName || '查看文件' }}</a>
-                </template>
-              <span v-if="form.attachment && !attachmentList.length" class="upload-status">已上传</span>
+              <AttachmentUpload ref="attUpload" v-model="attachmentList" :readonly="isReadonly" />
+              
             </div>
           </div>
           <div class="attachment-item">
@@ -285,6 +280,7 @@ import { agentGetList } from '@/api/trademark/bd/agent'
 import { countryRegionGetList } from '@/api/trademark/bd/countryRegion'
 import { brandSeriesGetList } from '@/api/trademark/bd/brandSeries'
 import { uploadFileApi, deletefile, getImageUrl } from '@/api/file'
+import AttachmentUpload from '@/components/AttachmentUpload.vue'
 import { onMounted, ref, reactive} from 'vue'
 import { Plus, Minus, DArrowRight } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -306,6 +302,7 @@ function toggle(key) { collapsed.value[key] = !collapsed.value[key] }
 const brandImageUrl = ref('')
 const fileUrlMap = reactive({})
 const attachmentList = ref([])
+const attUpload = ref(null)
 const pendingFiles = ref({
   brandUrl: null,
   agensecOpinionUrl: null,
@@ -535,7 +532,9 @@ function buildParam() {
     applyPerson:form.value.applyPerson, applyAddress:form.value.applyAddress, brandUrl:form.value.brandUrl,
     apAgentFeeParam: { agentId:form.value.agentFee.agentId, address:form.value.agentFee.address, outsideFee:form.value.agentFee.outsideFee, domesticFee:form.value.agentFee.domesticFee, agentFee:form.value.agentFee.agentFee, accountName:form.value.agentFee.accountName, bankName:form.value.agentFee.bankName, bankNumber:form.value.agentFee.bankNumber, payCompany:form.value.agentFee.payCompany },
     agensecOpinion:form.value.agensecOpinion, agensecOpinionUrl:form.value.agensecOpinionUrl, secretaryOpinion:form.value.secretaryOpinion, secretaryOpinionAttachment:form.value.secretaryOpinionAttachment, legalOpinion:form.value.legalOpinion, legalOpinionAttachment:form.value.legalOpinionAttachment, businessOpinion:form.value.businessOpinion, businessOpinionAttachment:form.value.businessOpinionAttachment,
-    attachment:form.value.attachment, remark:form.value.remark,
+    attachment:form.value.attachment,
+    attachments: attachmentList.value.map(a => a.fileId).filter(Boolean),
+    remark:form.value.remark,
     categories: form.value.categories.map(c=>({categoryNo:c.categoryNo, productService:c.productService})),
   }
 }
@@ -553,6 +552,7 @@ async function doSave() {
     }
     // 上传待上传文件
     await uploadPendingFiles()
+    if (attUpload.value) await attUpload.value.flush()
     // 保存表单
     const param = buildParam()
     if (isEdit.value) {

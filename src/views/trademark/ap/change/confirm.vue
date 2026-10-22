@@ -112,7 +112,7 @@
           <div class="block-input">
             <el-input v-model="form.approvalOpinion" type="textarea" :rows="3" placeholder="请输入" :disabled="isReadonly" />
             <div class="upload-line">
-              <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleFilePick(f, 'approvalOpinionAttachment')">
+              <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :on-change="(f) => handleFilePick(f, 'approvalOpinionAttachment')">
                 <el-button class="btn-upload" plain>上传附件</el-button>
               </el-upload>
               <a v-if="form.approvalOpinionAttachment && !pendingFiles.approvalOpinionAttachment && fileUrlMap['approvalOpinionAttachment']" :href="fileUrlMap['approvalOpinionAttachment'].url" target="_blank" class="file-link" @click.stop>{{ fileUrlMap['approvalOpinionAttachment'].name || '查看文件' }}</a>
@@ -134,13 +134,8 @@
           <label class="block-label">附件：</label>
           <div class="block-input">
             <div class="upload-line">
-              <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleFilePick(f, 'attachment')">
-                <el-button class="btn-upload" plain>上传文件</el-button>
-              </el-upload>
-              <template v-for="(att, idx) in attachmentList" :key="idx">
-                <a v-if="att.url" :href="att.url" target="_blank" class="file-link" @click.stop>{{ att.fileName || '查看文件' }}</a>
-                </template>
-              <span v-if="form.attachment && !pendingFiles.attachment && !attachmentList.length" class="uploaded-tip">已上传附件</span>
+              <AttachmentUpload ref="attUpload" v-model="attachmentList" :readonly="isReadonly" />
+              
             </div>
           </div>
         </div>
@@ -158,6 +153,7 @@ import { brandChangeSaveConfirm, brandChangeSubmitConfirm, brandChangeGetConfirm
 import { typeMap, scopeMap, brandStatusOptions } from '../config'
 import { agentGetList } from '@/api/trademark/bd/agent'
 import { uploadFileApi, getImageUrl } from '@/api/file'
+import AttachmentUpload from '@/components/AttachmentUpload.vue'
 import { onMounted, ref, computed, reactive} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
@@ -182,6 +178,7 @@ const beforeAgensecName = ref('')
 const pendingFiles = ref({ approvalOpinionAttachment: null, attachment: null })
 const fileUrlMap = reactive({})
 const attachmentList = ref([])
+const attUpload = ref(null)
 const options = ref({ agent: [] })
 
 const changeHeaderStyle = { background: '#D6E8FB', textAlign: 'center', color: '#333333', fontWeight: '600' }
@@ -387,6 +384,7 @@ function buildParam() {
     approvalOpinion: form.value.approvalOpinion,
     approvalOpinionAttachment: form.value.approvalOpinionAttachment,
     attachment: form.value.attachment,
+    attachments: attachmentList.value.map(a => a.fileId).filter(Boolean),
     remark: form.value.remark,
   }
 }
@@ -396,6 +394,7 @@ async function handleSave() {
   if (err) { ElMessage.error(err); return }
   try {
     await uploadPendingFiles()
+    if (attUpload.value) await attUpload.value.flush()
     await brandChangeSaveConfirm(buildParam())
     ElMessage.success('保存成功')
   } catch (e) {
@@ -409,6 +408,7 @@ async function handleSaveAndSubmit() {
   if (err) { ElMessage.error(err); return }
   try {
     await uploadPendingFiles()
+    if (attUpload.value) await attUpload.value.flush()
     await brandChangeSubmitConfirm(buildParam())
     ElMessage.success('确认提交成功')
     router.back()

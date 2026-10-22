@@ -115,7 +115,7 @@
           <div class="block-input">
             <el-input v-model="form.registerCertOpinion" type="textarea" :rows="3" placeholder="请输入" :disabled="isReadonly" />
             <div class="upload-line">
-              <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleFilePick(f, 'registerCertAttachment')">
+              <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :on-change="(f) => handleFilePick(f, 'registerCertAttachment')">
                 <el-button class="btn-upload" plain>上传附件</el-button>
               </el-upload>
               <a v-if="form.registerCertAttachment && !pendingFiles.registerCertAttachment && fileUrlMap['registerCertAttachment']" :href="fileUrlMap['registerCertAttachment'].url" target="_blank" class="file-link" @click.stop>{{ fileUrlMap['registerCertAttachment'].name || '查看文件' }}</a>
@@ -128,7 +128,7 @@
           <div class="block-input">
             <el-input v-model="form.transferApproveOpinion" type="textarea" :rows="3" placeholder="请输入" :disabled="isReadonly" />
             <div class="upload-line">
-              <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleFilePick(f, 'transferApproveAttachment')">
+              <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :on-change="(f) => handleFilePick(f, 'transferApproveAttachment')">
                 <el-button class="btn-upload" plain>上传附件</el-button>
               </el-upload>
               <a v-if="form.transferApproveAttachment && !pendingFiles.transferApproveAttachment && fileUrlMap['transferApproveAttachment']" :href="fileUrlMap['transferApproveAttachment'].url" target="_blank" class="file-link" @click.stop>{{ fileUrlMap['transferApproveAttachment'].name || '查看文件' }}</a>
@@ -150,13 +150,8 @@
           <label class="block-label">附件：</label>
           <div class="block-input">
             <div class="upload-line">
-              <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleFilePick(f, 'attachment')">
-                <el-button class="btn-upload" plain>上传文件</el-button>
-              </el-upload>
-              <template v-for="(att, idx) in attachmentList" :key="idx">
-                <a v-if="att.url" :href="att.url" target="_blank" class="file-link" @click.stop>{{ att.fileName || '查看文件' }}</a>
-                </template>
-              <span v-if="form.attachment && !pendingFiles.attachment && !attachmentList.length" class="uploaded-tip">已上传附件</span>
+              <AttachmentUpload ref="attUpload" v-model="attachmentList" :readonly="isReadonly" />
+              
             </div>
           </div>
         </div>
@@ -174,6 +169,7 @@ import { transferSaveConfirm, transferSubmitConfirm, transferGetConfirmDetail } 
 import { countryRegionGetList } from '@/api/trademark/bd/countryRegion'
 import { brandSeriesGetList } from '@/api/trademark/bd/brandSeries'
 import { uploadFileApi, getImageUrl } from '@/api/file'
+import AttachmentUpload from '@/components/AttachmentUpload.vue'
 import { onMounted, ref, reactive, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
@@ -200,6 +196,7 @@ const confirmBrandImageUrl = ref('')
 const pendingFiles = ref({ confirmBrandPicUrl: null, registerCertAttachment: null, transferApproveAttachment: null, attachment: null })
 const fileUrlMap = reactive({})
 const attachmentList = ref([])
+const attUpload = ref(null)
 const options = ref({ countryRegion: [], brandSeries: [] })
 
 const acceptResultOptions = [
@@ -457,6 +454,7 @@ function buildParam() {
     transferApproveOpinion: form.value.transferApproveOpinion,
     transferApproveAttachment: form.value.transferApproveAttachment,
     attachment: form.value.attachment,
+    attachments: attachmentList.value.map(a => a.fileId).filter(Boolean),
     remark: form.value.remark,
   }
 }
@@ -466,6 +464,7 @@ async function doSave() {
   saving.value = true
   try {
     await uploadPendingFiles()
+    if (attUpload.value) await attUpload.value.flush()
     await transferSaveConfirm(buildParam())
     ElMessage.success('保存成功')
     return true
@@ -489,6 +488,7 @@ async function handleSaveAndSubmit() {
   saving.value = true
   try {
     await uploadPendingFiles()
+    if (attUpload.value) await attUpload.value.flush()
     await transferSubmitConfirm(buildParam())
     ElMessage.success('确认提交成功')
     router.back()

@@ -54,7 +54,7 @@
       <div class="section">
         <div class="section-header" @click="toggle('attachment')"><span class="section-title"><span class="section-bar"></span>附件信息</span><el-icon class="collapse-icon" :class="{ collapsed: collapsed.attachment }"><DArrowRight /></el-icon></div>
         <div v-show="!collapsed.attachment" class="attachment-content">
-          <div class="attachment-item"><label class="attachment-label">附件：</label><div class="attachment-input"><el-upload :auto-upload="false" :limit="1" :on-change="(file) => handleOpinionUpload(file, 'attachment')" :on-remove="() => handleOpinionRemove('attachment')"><el-button class="btn-upload" plain>{{ form.attachment ? '重新上传' : '上传文件' }}</el-button></el-upload><template v-for="(att, idx) in attachmentList" :key="idx"><a v-if="att.url" :href="att.url" target="_blank" class="file-link">{{ att.fileName || '查看文件' }}</a></template></div></div>
+          <div class="attachment-item"><label class="attachment-label">附件：</label><div class="attachment-input"><AttachmentUpload ref="attUpload" v-model="attachmentList" :readonly="!canSave" /></div></div>
           <div class="attachment-item"><label class="attachment-label">备注：</label><div class="attachment-input"><el-input v-model="form.remark" type="textarea" :rows="3" placeholder="请输入" /></div></div>
         </div>
       </div>
@@ -70,6 +70,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { adminLitAdd, adminLitUpdate, adminLitSubmit, adminLitGetDetail, adminLitGetBrandInfo } from '@/api/trademark/ap/adminLit'
 import { countryRegionGetList } from '@/api/trademark/bd/countryRegion'
 import { uploadFileApi, getImageUrl } from '@/api/file'
+import AttachmentUpload from '@/components/AttachmentUpload.vue'
 import { getUserName } from '@/utils/auth'
 
 function getToday() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') }
@@ -84,6 +85,7 @@ const basicStatus = ref(0)
 const options = ref({ countryRegion: [] })
 const fileUrlMap = reactive({})
 const attachmentList = ref([])
+const attUpload = ref(null)
 const brandPreview = ref('')
 const headerStyle = { background: '#fafafa', textAlign: 'center', color: '#333333', fontWeight: '600' }
 const newCat = () => ({ categoryNo: '', productService: '' })
@@ -116,11 +118,14 @@ function buildParam() {
     litigationType: form.value.litigationType, litigationResult: form.value.litigationResult, brandPicUrl: form.value.brandPicUrl,
     categories: form.value.categories.filter(c => c.categoryNo || c.productService),
     tmOfficeOpinion: form.value.tmOfficeOpinion, tmOfficeOpinionAttachment: form.value.tmOfficeOpinionAttachment,
-    attachment: form.value.attachment, remark: form.value.remark,
+    attachment: form.value.attachment,
+    attachments: attachmentList.value.map(a => a.fileId).filter(Boolean), remark: form.value.remark,
   }
 }
-async function handleSave() { try { saving.value = true; await uploadPendingFiles(); const p = buildParam(); if (form.value.id) { await adminLitUpdate(p) } else { const r = await adminLitAdd(p); if (r.data) { form.value.id = r.data.id; form.value.applyNumber = r.data.applyNo } } ElMessage.success('保存成功') } catch (e) { ElMessage.error(e.message || '保存失败') } finally { saving.value = false } }
-async function handleSaveAndSubmit() { try { saving.value = true; await uploadPendingFiles(); const p = buildParam(); let id = form.value.id; if (id) { await adminLitUpdate(p) } else { const r = await adminLitAdd(p); if (r.data) { id = r.data.id; form.value.id = id; form.value.applyNumber = r.data.applyNo } } if (id) await adminLitSubmit(id); ElMessage.success('提交成功'); router.back() } catch (e) { ElMessage.error(e.message || '提交失败') } finally { saving.value = false } }
+async function handleSave() { try { saving.value = true; await uploadPendingFiles()
+    if (attUpload.value) await attUpload.value.flush(); const p = buildParam(); if (form.value.id) { await adminLitUpdate(p) } else { const r = await adminLitAdd(p); if (r.data) { form.value.id = r.data.id; form.value.applyNumber = r.data.applyNo } } ElMessage.success('保存成功') } catch (e) { ElMessage.error(e.message || '保存失败') } finally { saving.value = false } }
+async function handleSaveAndSubmit() { try { saving.value = true; await uploadPendingFiles()
+    if (attUpload.value) await attUpload.value.flush(); const p = buildParam(); let id = form.value.id; if (id) { await adminLitUpdate(p) } else { const r = await adminLitAdd(p); if (r.data) { id = r.data.id; form.value.id = id; form.value.applyNumber = r.data.applyNo } } if (id) await adminLitSubmit(id); ElMessage.success('提交成功'); router.back() } catch (e) { ElMessage.error(e.message || '提交失败') } finally { saving.value = false } }
 function handleCancel() { router.back() }
 
 async function loadEditData() {

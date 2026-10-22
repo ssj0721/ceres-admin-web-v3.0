@@ -104,7 +104,7 @@
           <el-icon class="collapse-icon" :class="{ collapsed: collapsed.attachment }"><DArrowRight /></el-icon>
         </div>
         <div v-show="!collapsed.attachment" class="attachment-content">
-          <div class="attachment-item"><label class="attachment-label">附件：</label><div class="attachment-input"><el-upload :auto-upload="false" :limit="1" :on-change="(file) => handleOpinionUpload(file, 'attachment')" :on-remove="() => handleOpinionRemove('attachment')"><el-button class="btn-upload" plain>{{ form.attachment ? '重新上传' : '上传文件' }}</el-button></el-upload><template v-for="(att, idx) in attachmentList" :key="idx"><a v-if="att.url" :href="att.url" target="_blank" class="file-link">{{ att.fileName || '查看文件' }}</a></template></div></div>
+          <div class="attachment-item"><label class="attachment-label">附件：</label><div class="attachment-input"><AttachmentUpload ref="attUpload" v-model="attachmentList" :readonly="!canSave" /></div></div>
           <div class="attachment-item"><label class="attachment-label">备注：</label><div class="attachment-input"><el-input v-model="form.remark" type="textarea" :rows="3" placeholder="请输入" /></div></div>
         </div>
       </div>
@@ -121,6 +121,7 @@ import { respReviewAdd, respReviewUpdate, respReviewSubmit, respReviewGetDetail,
 import { agentGetList } from '@/api/trademark/bd/agent'
 import { countryRegionGetList } from '@/api/trademark/bd/countryRegion'
 import { uploadFileApi, getImageUrl } from '@/api/file'
+import AttachmentUpload from '@/components/AttachmentUpload.vue'
 import { getUserName } from '@/utils/auth'
 
 function getToday() {
@@ -142,6 +143,7 @@ const basicStatus = ref(0)
 const options = ref({ agent: [], countryRegion: [] })
 const fileUrlMap = reactive({})
 const attachmentList = ref([])
+const attUpload = ref(null)
 const brandPicUrl = ref('')
 const citedBrandPreview = ref('')
 
@@ -235,7 +237,8 @@ function buildParam() {
     agentOpinion: form.value.agentOpinion, agentOpinionAttachment: form.value.agentOpinionAttachment,
     secretaryOpinion: form.value.secretaryOpinion, secretaryOpinionAttachment: form.value.secretaryOpinionAttachment,
     managementOpinion: form.value.managementOpinion, managementOpinionAttachment: form.value.managementOpinionAttachment,
-    attachment: form.value.attachment, remark: form.value.remark,
+    attachment: form.value.attachment,
+    attachments: attachmentList.value.map(a => a.fileId).filter(Boolean), remark: form.value.remark,
   }
 }
 
@@ -243,6 +246,7 @@ async function handleSave() {
   try {
     saving.value = true
     await uploadPendingFiles()
+    if (attUpload.value) await attUpload.value.flush()
     const param = buildParam()
     if (form.value.id) { await respReviewUpdate(param) } else {
       const res = await respReviewAdd(param)
@@ -257,6 +261,7 @@ async function handleSaveAndSubmit() {
   try {
     saving.value = true
     await uploadPendingFiles()
+    if (attUpload.value) await attUpload.value.flush()
     const param = buildParam()
     let id = form.value.id
     if (id) { await respReviewUpdate(param) } else {

@@ -166,7 +166,7 @@
           <div class="block-input">
             <el-input v-model="form.agensecOpinion" type="textarea" :rows="3" placeholder="请输入" :disabled="isReadonly" />
             <div class="upload-line">
-              <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleFilePick(f, 'agensecOpinionUrl')">
+              <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :on-change="(f) => handleFilePick(f, 'agensecOpinionUrl')">
                 <el-button class="btn-upload" plain>上传附件</el-button>
               </el-upload>
               <a v-if="form.agensecOpinionUrl && !pendingFiles.agensecOpinionUrl && fileUrlMap['agensecOpinionUrl']" :href="fileUrlMap['agensecOpinionUrl'].url" target="_blank" class="file-link" @click.stop>{{ fileUrlMap['agensecOpinionUrl'].name || '查看文件' }}</a>
@@ -188,13 +188,8 @@
           <label class="block-label">附件：</label>
           <div class="block-input">
             <div class="upload-line">
-              <el-upload v-if="!isReadonly" :auto-upload="false" :limit="1" :show-file-list="false" :on-change="(f) => handleFilePick(f, 'attachment')">
-                <el-button class="btn-upload" plain>上传文件</el-button>
-              </el-upload>
-              <template v-for="(att, idx) in attachmentList" :key="idx">
-                <a v-if="att.url" :href="att.url" target="_blank" class="file-link" @click.stop>{{ att.fileName || '查看文件' }}</a>
-                </template>
-              <span v-if="form.attachment && !pendingFiles.attachment && !attachmentList.length" class="uploaded-tip">已上传附件</span>
+              <AttachmentUpload ref="attUpload" v-model="attachmentList" :readonly="isReadonly" />
+              
             </div>
           </div>
         </div>
@@ -213,6 +208,7 @@ import { typeMap, scopeMap, registerTypeOptions } from '../config'
 import { countryRegionGetList } from '@/api/trademark/bd/countryRegion'
 import { brandSeriesGetList } from '@/api/trademark/bd/brandSeries'
 import { uploadFileApi, getImageUrl } from '@/api/file'
+import AttachmentUpload from '@/components/AttachmentUpload.vue'
 import { onMounted, ref, computed, reactive} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
@@ -236,6 +232,7 @@ const regPeriodRange = ref([])
 const pendingFiles = ref({ brandPicUrl: null, agensecOpinionUrl: null, attachment: null })
 const fileUrlMap = reactive({})
 const attachmentList = ref([])
+const attUpload = ref(null)
 const options = ref({ countryRegion: [], brandSeries: [] })
 
 const form = ref({
@@ -424,6 +421,7 @@ function buildParam() {
     agensecOpinion: form.value.agensecOpinion,
     agensecOpinionUrl: form.value.agensecOpinionUrl,
     attachment: form.value.attachment,
+    attachments: attachmentList.value.map(a => a.fileId).filter(Boolean),
     remark: form.value.remark,
     // 只提交受理的类别，类别内容取核定使用商品/服务项目
     categories: form.value.categories
@@ -468,6 +466,7 @@ function validateConfirm() {
 async function handleSave() {
   try {
     await uploadPendingFiles()
+    if (attUpload.value) await attUpload.value.flush()
     await registerSaveConfirm(buildParam())
     ElMessage.success('保存成功')
   } catch (e) {
@@ -481,6 +480,7 @@ async function handleSaveAndSubmit() {
   if (err) { ElMessage.error(err); return }
   try {
     await uploadPendingFiles()
+    if (attUpload.value) await attUpload.value.flush()
     await registerSubmitConfirm(buildParam())
     ElMessage.success('保存并提交成功')
     router.back()

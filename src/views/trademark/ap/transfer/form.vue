@@ -253,13 +253,8 @@
           <div class="attachment-item">
             <label class="attachment-label">附件：</label>
             <div class="attachment-input">
-              <el-upload v-if="canSave" :auto-upload="false" :limit="1" :on-change="(file) => handleOpinionUpload(file, 'attachment')" :on-remove="() => handleOpinionRemove('attachment')">
-                <el-button class="btn-upload" plain>{{ form.attachment ? '重新上传' : '上传文件' }}</el-button>
-              </el-upload>
-              <template v-for="(att, idx) in attachmentList" :key="idx">
-                <a v-if="att.url" :href="att.url" target="_blank" class="file-link" @click.stop>{{ att.fileName || '查看文件' }}</a>
-                </template>
-              <span v-if="form.attachment && !attachmentList.length" class="upload-status">已上传</span>
+              <AttachmentUpload ref="attUpload" v-model="attachmentList" :readonly="!canSave" />
+              
             </div>
           </div>
           <div class="attachment-item">
@@ -280,6 +275,7 @@ import { scopeOptions } from '../config'
 import { agentGetList } from '@/api/trademark/bd/agent'
 import { countryRegionGetList } from '@/api/trademark/bd/countryRegion'
 import { uploadFileApi, getImageUrl } from '@/api/file'
+import AttachmentUpload from '@/components/AttachmentUpload.vue'
 import { onMounted, ref, computed, reactive} from 'vue'
 import { Plus, Minus, DArrowRight } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -313,6 +309,7 @@ const brandImageUrl = ref('')
 const pendingFiles = ref({ brandPicUrl: null, agentOpinionAttachment: null, managementOpinionAttachment: null, attachment: null })
 const fileUrlMap = reactive({})
 const attachmentList = ref([])
+const attUpload = ref(null)
 
 const categoryHeaderStyle = { background: '#fafafa', textAlign: 'center', color: '#333333', fontWeight: '600' }
 
@@ -617,6 +614,7 @@ function buildParam() {
     managementOpinion: form.value.managementOpinion,
     managementOpinionAttachment: form.value.managementOpinionAttachment,
     attachment: form.value.attachment,
+    attachments: attachmentList.value.map(a => a.fileId).filter(Boolean),
     remark: form.value.remark,
   }
 }
@@ -637,6 +635,7 @@ async function doSave() {
       return false
     }
     await uploadPendingFiles()
+    if (attUpload.value) await attUpload.value.flush()
     const param = buildParam()
     if (isEdit.value) {
       await transferUpdate(param)

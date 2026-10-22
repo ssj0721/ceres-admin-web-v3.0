@@ -2,6 +2,8 @@ import request from '@/utils/request'
 
 const API = {
   LIST: '/basic/list',
+  EXPORT_COLUMNS: '/basic/exportColumns',
+  EXPORT: '/basic/export',
   DELETE: '/basic/delete',
   DELETE_BATCH: '/basic/deleteBatch',
 }
@@ -30,4 +32,14 @@ export function basicDeleteBatch(ids) {
     method: 'post',
     data: ids,
   })
+}
+
+// 某类型可导出的列
+export function basicExportColumns(type) {
+  return request({ url: API.EXPORT_COLUMNS, method: 'get', params: { type } })
+}
+
+// 导出商标申请列表（blob）
+export function basicExportExcel(data) {
+  return request({ url: API.EXPORT, method: 'post', data, responseType: 'blob' })
 }
