@@ -8,6 +8,8 @@ const API = {
   GET_ALL: '/brBrand/getAll',
   SEARCH: '/brBrand/search',
   GET_DETAIL: '/brBrand/getDetail',
+  EXPORT_COLUMNS: '/brBrand/exportColumns',
+  EXPORT: '/brBrand/export',
 }
 
 // 新增商标信息表
@@ -71,4 +73,14 @@ export function brBrandGetDetail(data) {
     method: 'post',
     data,
   })
+}
+
+// 台账可导出列
+export function brBrandExportColumns() {
+  return request({ url: API.EXPORT_COLUMNS, method: 'post' })
+}
+
+// 导出商标台账（blob）
+export function brBrandExportExcel(data) {
+  return request({ url: API.EXPORT, method: 'post', data, responseType: 'blob' })
 }

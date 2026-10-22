@@ -47,6 +47,8 @@
         </div>
       </div>
 
+      <BrandExportDialog v-model:show="showExportDialog" :ids="exportIds" :filters="{ keyword: formInline.keyword, registerStatus: formInline.registerStatus, scopeType: formInline.scopeType, countryRegionId: formInline.countryRegionId, applyDateStart: dateRange[0], applyDateEnd: dateRange[1] }" />
+
       <!-- 表格 -->
       <div class="table-wrapper">
         <el-table v-loading="tableLoading" class="dataTable" :header-cell-style="tableOptions.headStyle" :cell-style="tableOptions.cellStyle" :data="list" @selection-change="handleSelectionChange">
@@ -101,6 +103,7 @@
 <script setup>
 import { registerStatusMap, registerStatusOptions, scopeTypeMap, scopeOptions } from './config'
 import { brBrandSearch } from '@/api/trademark/br/brBrand'
+import BrandExportDialog from './exportDialog.vue'
 import { agentGetList } from '@/api/trademark/bd/agent'
 import { companyNameGetList } from '@/api/trademark/bd/companyName'
 import { countryRegionGetList } from '@/api/trademark/bd/countryRegion'
@@ -116,6 +119,8 @@ const tableLoading = ref(false)
 const list = ref([])
 const dateRange = ref([])
 const selectedRows = ref([])
+const showExportDialog = ref(false)
+const exportIds = ref([])
 
 const formInline = ref({ keyword: '', registerStatus: null, scopeType: null, countryRegionId: null })
 const queryOptions = ref({ page: 1, pageSize: 10 })
@@ -210,7 +215,11 @@ function handlePageChange(val, type) {
 }
 function handleSelectionChange(rows) { selectedRows.value = rows }
 function handleDetail(row) { router.push({ name: 'BrandDetail', query: { applyNo: row.applyNo } }) }
-function handleExport() { ElMessage.info('导出功能待实现') }
+function handleExport() {
+  if (!selectedRows.value.length) { ElMessage.warning('请先选择要导出的记录'); return }
+  exportIds.value = selectedRows.value.map(r => r.id)
+  showExportDialog.value = true
+}
 
 function formatDate(val) {
   if (!val) return '-'
